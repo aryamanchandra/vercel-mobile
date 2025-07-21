@@ -112,3 +112,40 @@ export interface ApiResponse<T> {
   };
 }
 
+export interface DNSRecord {
+  id: string;
+  slug: string;
+  name: string;
+  type: 'A' | 'AAAA' | 'ALIAS' | 'CAA' | 'CNAME' | 'MX' | 'SRV' | 'TXT' | 'NS';
+  value: string;
+  mxPriority?: number;
+  priority?: number;
+  ttl?: number;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface DeploymentAlias {
+  uid: string;
+  alias: string;
+  createdAt: number;
+  deployment: {
+    id: string;
+    url: string;
+  };
+}
+
+export interface RuntimeLog {
+  timestamp: number;
+  message: string;
+  source: 'stdout' | 'stderr' | 'static' | 'lambda' | 'external';
+  type?: 'info' | 'warn' | 'error';
+  requestId?: string;
+}
+
+export interface BuildEvent {
+  type: string;
+  payload: any;
+  createdAt: number;
+}
+
