@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -46,7 +47,7 @@ const TabNavigator = () => {
         options={{
           title: 'Projects',
           tabBarLabel: 'Projects',
-          tabBarIcon: () => '📦',
+          tabBarIcon: () => <Text>📦</Text>,
         }}
       />
       <Tab.Screen
@@ -55,7 +56,7 @@ const TabNavigator = () => {
         options={{
           title: 'Deployments',
           tabBarLabel: 'Deployments',
-          tabBarIcon: () => '🚀',
+          tabBarIcon: () => <Text>🚀</Text>,
         }}
       />
       <Tab.Screen
@@ -64,7 +65,7 @@ const TabNavigator = () => {
         options={{
           title: 'Domains',
           tabBarLabel: 'Domains',
-          tabBarIcon: () => '🌐',
+          tabBarIcon: () => <Text>🌐</Text>,
         }}
       />
       <Tab.Screen
@@ -73,7 +74,7 @@ const TabNavigator = () => {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
-          tabBarIcon: () => '⚙️',
+          tabBarIcon: () => <Text>⚙️</Text>,
         }}
       />
     </Tab.Navigator>
