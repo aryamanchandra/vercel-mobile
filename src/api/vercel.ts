@@ -142,5 +142,74 @@ export class VercelAPI {
     const response = await this.client.get(`/v2/deployments/${deploymentId}/events`);
     return response.data;
   }
+
+  async getRuntimeLogs(projectId: string, deploymentId: string) {
+    const response = await this.client.get(
+      `/v3/projects/${projectId}/deployments/${deploymentId}/runtime-logs`
+    );
+    return response.data;
+  }
+
+  // Aliases (Promote to Production)
+  async getDeploymentAliases(deploymentId: string) {
+    const response = await this.client.get(`/v2/deployments/${deploymentId}/aliases`);
+    return response.data;
+  }
+
+  async assignAlias(deploymentId: string, alias: string) {
+    const response = await this.client.post(`/v2/deployments/${deploymentId}/aliases`, {
+      alias,
+    });
+    return response.data;
+  }
+
+  async promoteToProduction(deploymentId: string, productionDomain: string) {
+    return this.assignAlias(deploymentId, productionDomain);
+  }
+
+  // DNS Records
+  async getDNSRecords(domain: string) {
+    const response = await this.client.get(`/v4/domains/${domain}/records`);
+    return response.data;
+  }
+
+  async createDNSRecord(
+    domain: string,
+    record: {
+      name: string;
+      type: string;
+      value: string;
+      ttl?: number;
+    }
+  ) {
+    const response = await this.client.post(`/v2/domains/${domain}/records`, record);
+    return response.data;
+  }
+
+  async updateDNSRecord(domain: string, recordId: string, data: any) {
+    const response = await this.client.patch(`/v1/domains/${domain}/records/${recordId}`, data);
+    return response.data;
+  }
+
+  async deleteDNSRecord(domain: string, recordId: string) {
+    const response = await this.client.delete(`/v2/domains/${domain}/records/${recordId}`);
+    return response.data;
+  }
+
+  // Redeploy
+  async redeployDeployment(deploymentId: string, name: string, target?: string) {
+    const response = await this.client.post('/v13/deployments', {
+      name,
+      deploymentId,
+      target: target || 'production',
+    });
+    return response.data;
+  }
+
+  // Analytics
+  async getProjectAnalytics(projectId: string) {
+    const response = await this.client.get(`/v1/analytics/${projectId}`);
+    return response.data;
+  }
 }
 
