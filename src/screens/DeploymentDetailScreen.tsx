@@ -17,6 +17,8 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
   const { api } = useAuth();
   const [canceling, setCanceling] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [promoting, setPromoting] = useState(false);
+  const [redeploying, setRedeploying] = useState(false);
 
   const handleCancel = () => {
     if (deployment.state !== 'BUILDING' && deployment.state !== 'QUEUED') {
@@ -76,6 +78,64 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
       Alert.alert('Error', err.message || 'Failed to delete deployment');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handlePromote = () => {
+    if (deployment.state !== 'READY') {
+      Alert.alert('Error', 'Only ready deployments can be promoted to production');
+      return;
+    }
+
+    Alert.alert(
+      'Promote to Production',
+      `Promote ${deployment.url} to your production domain?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Promote', onPress: confirmPromote },
+      ]
+    );
+  };
+
+  const confirmPromote = async () => {
+    if (!api) return;
+
+    try {
+      setPromoting(true);
+      // Assuming the main production domain is the deployment name
+      const productionDomain = `${deployment.name}.vercel.app`;
+      await api.promoteToProduction(deployment.uid, productionDomain);
+      Alert.alert('Success', 'Deployment promoted to production!');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to promote deployment');
+    } finally {
+      setPromoting(false);
+    }
+  };
+
+  const handleRedeploy = () => {
+    Alert.alert(
+      'Redeploy',
+      'Create a new deployment with the same source?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Redeploy', onPress: confirmRedeploy },
+      ]
+    );
+  };
+
+  const confirmRedeploy = async () => {
+    if (!api) return;
+
+    try {
+      setRedeploying(true);
+      await api.redeployDeployment(deployment.uid, deployment.name, deployment.target || undefined);
+      Alert.alert('Success', 'Deployment queued! Check your deployments list.');
+      navigation.goBack();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to redeploy');
+    } finally {
+      setRedeploying(false);
     }
   };
 
@@ -167,6 +227,24 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
           title="Open Deployment"
           onPress={() => Linking.openURL(`https://${deployment.url}`)}
           variant="primary"
+          style={styles.actionButton}
+        />
+
+        {deployment.state === 'READY' && deployment.target !== 'production' && (
+          <Button
+            title="🚀 Promote to Production"
+            onPress={handlePromote}
+            variant="primary"
+            loading={promoting}
+            style={styles.actionButton}
+          />
+        )}
+
+        <Button
+          title="🔄 Redeploy"
+          onPress={handleRedeploy}
+          variant="secondary"
+          loading={redeploying}
           style={styles.actionButton}
         />
 
