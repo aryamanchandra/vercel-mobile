@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { VercelDomain } from '../types';
 
-export const DomainsScreen = () => {
+export const DomainsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
   const [domains, setDomains] = useState<VercelDomain[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,31 +47,40 @@ export const DomainsScreen = () => {
   }, [api]);
 
   const renderDomain = ({ item }: { item: VercelDomain }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => Linking.openURL(`https://${item.name}`)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.domainName}>{item.name}</Text>
-        {item.verified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>✓ Verified</Text>
-          </View>
-        )}
-      </View>
+    <View style={styles.card}>
+      <TouchableOpacity
+        onPress={() => Linking.openURL(`https://${item.name}`)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.domainName}>{item.name}</Text>
+          {item.verified && (
+            <View style={styles.verifiedBadge}>
+              <Text style={styles.verifiedText}>✓ Verified</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
       
       <View style={styles.cardFooter}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.serviceType}</Text>
-        </View>
-        {item.cdnEnabled && (
+        <View style={{ flexDirection: 'row', gap: 8, flex: 1 }}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>CDN Enabled</Text>
+            <Text style={styles.badgeText}>{item.serviceType}</Text>
           </View>
-        )}
+          {item.cdnEnabled && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>CDN Enabled</Text>
+            </View>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.dnsButton}
+          onPress={() => navigation.navigate('DNSRecords', { domain: item.name })}
+        >
+          <Text style={styles.dnsButtonText}>DNS →</Text>
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   if (loading) {
@@ -204,6 +213,17 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     color: '#888',
+  },
+  dnsButton: {
+    backgroundColor: '#0070f3',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  dnsButtonText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 
