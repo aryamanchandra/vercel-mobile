@@ -15,6 +15,7 @@ import { ProjectDetailScreen } from '../screens/ProjectDetailScreen';
 import { DeploymentDetailScreen } from '../screens/DeploymentDetailScreen';
 import { EnvVariablesScreen } from '../screens/EnvVariablesScreen';
 import { DNSRecordsScreen } from '../screens/DNSRecordsScreen';
+import { RuntimeLogsScreen } from '../screens/RuntimeLogsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -137,6 +138,11 @@ export const AppNavigator = () => {
               name="DNSRecords"
               component={DNSRecordsScreen}
               options={{ title: 'DNS Records' }}
+            />
+            <Stack.Screen
+              name="RuntimeLogs"
+              component={RuntimeLogsScreen}
+              options={{ title: 'Runtime Logs' }}
             />
           </>
         )}

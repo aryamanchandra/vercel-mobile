@@ -230,6 +230,17 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
           style={styles.actionButton}
         />
 
+        <Button
+          title="📝 View Runtime Logs"
+          onPress={() => navigation.navigate('RuntimeLogs', {
+            projectId: deployment.name,
+            deploymentId: deployment.uid,
+            deploymentUrl: deployment.url,
+          })}
+          variant="secondary"
+          style={styles.actionButton}
+        />
+
         {deployment.state === 'READY' && deployment.target !== 'production' && (
           <Button
             title="🚀 Promote to Production"
