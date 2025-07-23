@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 // Screens
 import { LoginScreen } from '../screens/LoginScreen';
+import { DashboardScreen } from '../screens/DashboardScreen';
 import { ProjectsScreen } from '../screens/ProjectsScreen';
 import { DeploymentsScreen } from '../screens/DeploymentsScreen';
 import { DomainsScreen } from '../screens/DomainsScreen';
@@ -43,6 +44,15 @@ const TabNavigator = () => {
         headerShown: false,
       }}
     >
+      <Tab.Screen
+        name="DashboardTab"
+        component={DashboardScreen}
+        options={{
+          title: 'Dashboard',
+          tabBarLabel: 'Home',
+          tabBarIcon: () => <Text>🏠</Text>,
+        }}
+      />
       <Tab.Screen
         name="ProjectsTab"
         component={ProjectsScreen}
