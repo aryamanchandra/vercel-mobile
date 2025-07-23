@@ -17,6 +17,7 @@ import { DeploymentDetailScreen } from '../screens/DeploymentDetailScreen';
 import { EnvVariablesScreen } from '../screens/EnvVariablesScreen';
 import { DNSRecordsScreen } from '../screens/DNSRecordsScreen';
 import { RuntimeLogsScreen } from '../screens/RuntimeLogsScreen';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -97,7 +98,7 @@ export const AppNavigator = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return null; // Or a loading screen
+    return <LoadingScreen message="Initializing..." />;
   }
 
   return (
