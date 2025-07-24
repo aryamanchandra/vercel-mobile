@@ -12,7 +12,6 @@ import {
   TextInput,
   ScrollView,
 } from 'react-native';
-import { Lock } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
@@ -163,7 +162,7 @@ export const EnvVariablesScreen = ({ route }: any) => {
       
       {envVars.length === 0 ? (
         <EmptyState
-          icon={Lock}
+          icon="lock-closed-outline"
           title="No Environment Variables"
           message="Add environment variables to configure your deployments."
         />

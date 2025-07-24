@@ -10,7 +10,6 @@ import {
   Alert,
   Clipboard,
 } from 'react-native';
-import { FileText } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { RuntimeLog } from '../types';
@@ -167,7 +166,7 @@ export const RuntimeLogsScreen = ({ route }: any) => {
 
       {filteredLogs.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          icon="document-text-outline"
           title={logs.length === 0 ? 'No Logs' : 'No Results'}
           message={logs.length === 0 ? 'No runtime logs available for this deployment.' : 'No logs match your search.'}
         />

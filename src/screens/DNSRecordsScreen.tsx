@@ -12,7 +12,6 @@ import {
   TextInput,
   ScrollView,
 } from 'react-native';
-import { Server } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
@@ -188,7 +187,7 @@ export const DNSRecordsScreen = ({ route }: any) => {
 
       {records.length === 0 ? (
         <EmptyState
-          icon={Server}
+          icon="server-outline"
           title="No DNS Records"
           message="Add your first DNS record to get started."
         />

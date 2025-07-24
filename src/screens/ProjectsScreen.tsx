@@ -7,7 +7,6 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { PackageOpen, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
@@ -62,7 +61,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
     return (
       <View style={styles.centered}>
         <EmptyState
-          icon={AlertCircle}
+          icon="alert-circle-outline"
           title="Error Loading Projects"
           message={error}
         />
@@ -79,7 +78,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
       
       {projects.length === 0 ? (
         <EmptyState
-          icon={PackageOpen}
+          icon="cube-outline"
           title="No Projects"
           message="You don't have any projects yet. Create one on Vercel to get started."
         />

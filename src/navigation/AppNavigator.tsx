@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Package, Rocket, Globe, Settings } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
@@ -51,7 +51,7 @@ const TabNavigator = () => {
         options={{
           title: 'Dashboard',
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size || 24} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -60,7 +60,7 @@ const TabNavigator = () => {
         options={{
           title: 'Projects',
           tabBarLabel: 'Projects',
-          tabBarIcon: ({ color, size }) => <Package color={color} size={size || 24} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="cube-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -69,7 +69,7 @@ const TabNavigator = () => {
         options={{
           title: 'Deployments',
           tabBarLabel: 'Deployments',
-          tabBarIcon: ({ color, size }) => <Rocket color={color} size={size || 24} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="rocket-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -78,7 +78,7 @@ const TabNavigator = () => {
         options={{
           title: 'Domains',
           tabBarLabel: 'Domains',
-          tabBarIcon: ({ color, size }) => <Globe color={color} size={size || 24} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="globe-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -87,7 +87,7 @@ const TabNavigator = () => {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, size }) => <Settings color={color} size={size || 24} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>
