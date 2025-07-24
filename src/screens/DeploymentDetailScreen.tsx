@@ -8,6 +8,7 @@ import {
   Linking,
   TouchableOpacity,
 } from 'react-native';
+import { ExternalLink, FileText, ArrowUpCircle, RotateCw, XCircle, Trash2 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { VercelDeployment } from '../types';

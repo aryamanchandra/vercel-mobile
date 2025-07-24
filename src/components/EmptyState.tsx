@@ -1,16 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 interface EmptyStateProps {
-  icon: string;
+  icon: LucideIcon;
   title: string;
   message: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, message }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
+      <Icon size={64} color="#666" style={styles.icon} />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
     </View>
@@ -25,7 +26,6 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   icon: {
-    fontSize: 64,
     marginBottom: 16,
   },
   title: {

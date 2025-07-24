@@ -10,6 +10,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
+import { Rocket, Search, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { DeploymentCard } from '../components/DeploymentCard';
 import { EmptyState } from '../components/EmptyState';
@@ -110,7 +111,7 @@ export const DeploymentsScreen = ({ navigation }: any) => {
     return (
       <View style={styles.centered}>
         <EmptyState
-          icon="⚠️"
+          icon={AlertCircle}
           title="Error Loading Deployments"
           message={error}
         />
@@ -140,13 +141,13 @@ export const DeploymentsScreen = ({ navigation }: any) => {
       
       {filteredDeployments.length === 0 && deployments.length > 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={Search}
           title="No Results"
           message="No deployments match your filters. Try adjusting them."
         />
       ) : filteredDeployments.length === 0 ? (
         <EmptyState
-          icon="🚀"
+          icon={Rocket}
           title="No Deployments"
           message="Your deployments will appear here once you start deploying."
         />

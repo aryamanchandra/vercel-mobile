@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import { Globe, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { VercelDomain } from '../types';
@@ -95,7 +96,7 @@ export const DomainsScreen = ({ navigation }: any) => {
     return (
       <View style={styles.centered}>
         <EmptyState
-          icon="⚠️"
+          icon={AlertCircle}
           title="Error Loading Domains"
           message={error}
         />
@@ -112,7 +113,7 @@ export const DomainsScreen = ({ navigation }: any) => {
       
       {domains.length === 0 ? (
         <EmptyState
-          icon="🌐"
+          icon={Globe}
           title="No Domains"
           message="You don't have any domains configured yet."
         />
