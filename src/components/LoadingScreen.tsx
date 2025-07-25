@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { colors } from '../theme/colors';
 
 interface LoadingScreenProps {
   message?: string;
@@ -20,19 +21,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   logo: {
     fontSize: 64,
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 24,
+    fontWeight: '700',
   },
   spinner: {
     marginBottom: 16,
   },
   message: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 13,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
 });
 

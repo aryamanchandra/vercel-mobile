@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { colors, spacing } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
@@ -72,8 +73,10 @@ export const ProjectsScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Projects</Text>
-        <Text style={styles.count}>{projects.length} total</Text>
+        <View>
+          <Text style={styles.title}>Projects</Text>
+          <Text style={styles.count}>{projects.length} {projects.length === 1 ? 'project' : 'projects'}</Text>
+        </View>
       </View>
       
       {projects.length === 0 ? (
@@ -106,34 +109,36 @@ export const ProjectsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: colors.border.default,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -0.5,
+    marginBottom: spacing.xs,
   },
   count: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
   listContent: {
-    padding: 16,
+    padding: spacing.md,
   },
 });
 

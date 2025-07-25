@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
@@ -27,21 +28,31 @@ const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#000',
+          backgroundColor: colors.background,
           borderBottomWidth: 1,
-          borderBottomColor: '#222',
+          borderBottomColor: colors.border.default,
         },
-        headerTintColor: '#fff',
+        headerTintColor: colors.foreground,
         headerTitleStyle: {
           fontWeight: '700',
+          fontSize: 17,
+          letterSpacing: -0.3,
         },
         tabBarStyle: {
-          backgroundColor: '#000',
+          backgroundColor: colors.background,
           borderTopWidth: 1,
-          borderTopColor: '#222',
+          borderTopColor: colors.border.default,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: colors.foreground,
+        tabBarInactiveTintColor: colors.gray[600],
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          letterSpacing: -0.2,
+        },
         headerShown: false,
       }}
     >
@@ -106,14 +117,19 @@ export const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#000',
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border.default,
           },
-          headerTintColor: '#fff',
+          headerTintColor: colors.foreground,
           headerTitleStyle: {
-            fontWeight: '700',
+            fontWeight: '600',
+            fontSize: 17,
+            letterSpacing: -0.3,
           },
+          headerShadowVisible: false,
           contentStyle: {
-            backgroundColor: '#000',
+            backgroundColor: colors.background,
           },
         }}
       >
