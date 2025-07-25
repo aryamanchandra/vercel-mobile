@@ -1,24 +1,29 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { colors, borderRadius, spacing } from '../theme/colors';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  fullWidth?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = 'primary',
+  size = 'md',
   loading = false,
   disabled = false,
   style,
   textStyle,
+  fullWidth = false,
 }) => {
   const getButtonStyle = () => {
     if (disabled) return styles.buttonDisabled;
@@ -30,6 +35,8 @@ export const Button: React.FC<ButtonProps> = ({
         return styles.buttonSecondary;
       case 'danger':
         return styles.buttonDanger;
+      case 'ghost':
+        return styles.buttonGhost;
       default:
         return styles.buttonPrimary;
     }
@@ -37,24 +44,52 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextStyle = () => {
     switch (variant) {
+      case 'primary':
+        return styles.textPrimary;
       case 'secondary':
         return styles.textSecondary;
+      case 'danger':
+        return styles.textDanger;
+      case 'ghost':
+        return styles.textGhost;
       default:
-        return styles.text;
+        return styles.textPrimary;
+    }
+  };
+
+  const getSizeStyle = () => {
+    switch (size) {
+      case 'sm':
+        return styles.sizeSm;
+      case 'md':
+        return styles.sizeMd;
+      case 'lg':
+        return styles.sizeLg;
+      default:
+        return styles.sizeMd;
     }
   };
 
   return (
     <TouchableOpacity
-      style={[styles.button, getButtonStyle(), style]}
+      style={[
+        styles.button,
+        getButtonStyle(),
+        getSizeStyle(),
+        fullWidth && styles.fullWidth,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'secondary' ? '#fff' : '#000'} />
+        <ActivityIndicator 
+          color={variant === 'primary' ? colors.background : colors.foreground} 
+          size="small" 
+        />
       ) : (
-        <Text style={[getTextStyle(), textStyle]}>{title}</Text>
+        <Text style={[styles.text, getTextStyle(), textStyle]}>{title}</Text>
       )}
     </TouchableOpacity>
   );
@@ -62,36 +97,69 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 6,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    flexDirection: 'row',
   },
   buttonPrimary: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.foreground,
+    borderWidth: 1,
+    borderColor: colors.foreground,
   },
   buttonSecondary: {
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border.default,
   },
   buttonDanger: {
-    backgroundColor: '#ff0000',
+    backgroundColor: colors.error,
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  buttonGhost: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   buttonDisabled: {
-    backgroundColor: '#333',
+    backgroundColor: colors.gray[900],
+    borderWidth: 1,
+    borderColor: colors.gray[800],
+    opacity: 0.5,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+  sizeSm: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    height: 32,
+  },
+  sizeMd: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    height: 40,
+  },
+  sizeLg: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    height: 48,
   },
   text: {
-    color: '#000',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+    letterSpacing: -0.2,
+  },
+  textPrimary: {
+    color: colors.background,
   },
   textSecondary: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.foreground,
+  },
+  textDanger: {
+    color: colors.foreground,
+  },
+  textGhost: {
+    color: colors.gray[400],
   },
 });
-

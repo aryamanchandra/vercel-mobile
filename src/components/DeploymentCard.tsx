@@ -1,37 +1,32 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { VercelDeployment } from '../types';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, borderRadius, spacing } from '../theme/colors';
+import { Badge } from './Badge';
+import type { VercelDeployment } from '../types';
 
 interface DeploymentCardProps {
   deployment: VercelDeployment;
   onPress: () => void;
 }
 
-const { width } = Dimensions.get('window');
-
 export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress }) => {
-  const getStateColor = (state: string) => {
-    const colors: { [key: string]: string } = {
-      READY: '#0070f3',
-      BUILDING: '#f5a623',
-      ERROR: '#ff0000',
-      QUEUED: '#888',
-      INITIALIZING: '#888',
-      CANCELED: '#666',
+  const getStateConfig = (state: string) => {
+    const configs: { [key: string]: { variant: 'success' | 'warning' | 'error' | 'gray'; icon: string } } = {
+      READY: { variant: 'success', icon: 'checkmark-circle' },
+      BUILDING: { variant: 'warning', icon: 'time' },
+      ERROR: { variant: 'error', icon: 'close-circle' },
+      QUEUED: { variant: 'gray', icon: 'hourglass' },
+      INITIALIZING: { variant: 'gray', icon: 'ellipsis-horizontal' },
+      CANCELED: { variant: 'gray', icon: 'ban' },
     };
-    return colors[state] || '#888';
+    return configs[state] || configs.QUEUED;
   };
 
-  const getStateIcon = (state: string) => {
-    const icons: { [key: string]: string } = {
-      READY: '✓',
-      BUILDING: '⟳',
-      ERROR: '✕',
-      QUEUED: '○',
-      INITIALIZING: '◐',
-      CANCELED: '⊘',
-    };
-    return icons[state] || '○';
+  const getTargetIcon = (target?: string) => {
+    if (target === 'production') return 'rocket';
+    if (target === 'preview') return 'eye';
+    return 'git-branch';
   };
 
   const formatDate = (timestamp: number) => {
@@ -40,121 +35,158 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const commitMessage = deployment.meta?.githubCommitMessage || '';
-  const branch = deployment.meta?.githubCommitRef || deployment.target || 'main';
+  const stateConfig = getStateConfig(deployment.state);
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.card} activeOpacity={0.7}>
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
       <View style={styles.header}>
-        <View style={[styles.statusDot, { backgroundColor: getStateColor(deployment.state) }]}>
-          <Text style={styles.statusIcon}>{getStateIcon(deployment.state)}</Text>
+        <View style={styles.titleRow}>
+          <View style={styles.projectInfo}>
+            <Ionicons 
+              name={getTargetIcon(deployment.target) as any}
+              size={14} 
+              color={colors.gray[500]}
+              style={styles.icon}
+            />
+            <Text style={styles.name} numberOfLines={1}>
+              {deployment.name}
+            </Text>
+          </View>
+          <Badge label={deployment.state} variant={stateConfig.variant} size="sm" />
         </View>
-        <View style={styles.contentContainer}>
-          <View style={styles.topRow}>
-            <Text style={styles.url} numberOfLines={1}>
-              {deployment.url}
-            </Text>
-            <Text style={styles.time}>{formatDate(deployment.created)}</Text>
-          </View>
-          
-          {commitMessage ? (
-            <Text style={styles.commit} numberOfLines={1}>
-              {commitMessage}
-            </Text>
-          ) : null}
-          
-          <View style={styles.bottomRow}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{branch}</Text>
-            </View>
-            <Text style={styles.state}>{deployment.state}</Text>
-          </View>
+
+        {deployment.meta?.githubCommitMessage && (
+          <Text style={styles.commitMessage} numberOfLines={1}>
+            {deployment.meta.githubCommitMessage}
+          </Text>
+        )}
+
+        <View style={styles.meta}>
+          <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
+          <Text style={styles.metaText}>
+            {deployment.meta?.githubCommitSha?.slice(0, 7) || 'Unknown'}
+          </Text>
+          <View style={styles.dot} />
+          <Text style={styles.metaText}>{formatDate(deployment.created)}</Text>
+          {deployment.target === 'production' && (
+            <>
+              <View style={styles.dot} />
+              <View style={styles.prodBadge}>
+                <Text style={styles.prodText}>PROD</Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
+
+      {deployment.url && (
+        <View style={styles.footer}>
+          <Ionicons name="globe-outline" size={12} color={colors.gray[600]} />
+          <Text style={styles.url} numberOfLines={1}>
+            {deployment.url}
+          </Text>
+          <Ionicons name="open-outline" size={12} color={colors.gray[600]} />
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#000',
-    borderRadius: 8,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#333',
-    padding: 16,
-    marginBottom: 12,
-    width: width - 32,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   header: {
+    gap: spacing.xs,
+  },
+  titleRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  statusDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
-  statusIcon: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  contentContainer: {
+  projectInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  topRow: {
+  icon: {
+    marginRight: spacing.xs,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.foreground,
+    letterSpacing: -0.2,
+    flex: 1,
+  },
+  commitMessage: {
+    fontSize: 12,
+    color: colors.gray[400],
+    letterSpacing: -0.2,
+    marginTop: 2,
+  },
+  meta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  metaText: {
+    fontSize: 11,
+    color: colors.gray[600],
+    letterSpacing: -0.2,
+  },
+  dot: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.gray[700],
+  },
+  prodBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 2,
+    backgroundColor: colors.accent.blue,
+  },
+  prodText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: colors.foreground,
+    letterSpacing: 0.5,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
   },
   url: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: 11,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
     flex: 1,
-    marginRight: 8,
-  },
-  time: {
-    fontSize: 11,
-    color: '#666',
-  },
-  commit: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 8,
-  },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  badge: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  badgeText: {
-    fontSize: 11,
-    color: '#888',
-  },
-  state: {
-    fontSize: 11,
-    color: '#666',
-    textTransform: 'capitalize',
+    fontFamily: 'monospace',
   },
 });
-

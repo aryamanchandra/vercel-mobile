@@ -1,24 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { VercelProject } from '../types';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, borderRadius, spacing } from '../theme/colors';
+import type { VercelProject } from '../types';
 
 interface ProjectCardProps {
   project: VercelProject;
   onPress: () => void;
 }
 
-const { width } = Dimensions.get('window');
-
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) => {
-  const getFrameworkIcon = (framework: string | null) => {
+  const getFrameworkIcon = (framework?: string) => {
     const icons: { [key: string]: string } = {
-      nextjs: '▲',
-      react: '⚛',
-      vue: 'V',
-      angular: 'A',
-      svelte: 'S',
+      nextjs: 'logo-react',
+      react: 'logo-react',
+      vue: 'logo-vue',
+      angular: 'logo-angular',
+      svelte: 'logo-web-component',
+      gatsby: 'logo-react',
+      nuxt: 'logo-vue',
+      default: 'code-outline',
     };
-    return framework ? icons[framework.toLowerCase()] || '◆' : '◆';
+    return icons[framework?.toLowerCase() || 'default'] || icons.default;
   };
 
   const formatDate = (timestamp: number) => {
@@ -29,116 +32,138 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
     
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
-    if (days < 7) return `${days} days ago`;
-    return date.toLocaleDateString();
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const productionUrl = project.targets?.production?.url || project.latestDeployments?.[0]?.url;
-
   return (
-    <TouchableOpacity onPress={onPress} style={styles.card} activeOpacity={0.7}>
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{getFrameworkIcon(project.framework)}</Text>
+          <Ionicons 
+            name={getFrameworkIcon(project.framework) as any} 
+            size={20} 
+            color={colors.foreground}
+          />
         </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
+        <View style={styles.headerContent}>
+          <Text style={styles.name} numberOfLines={1}>
             {project.name}
           </Text>
-          {productionUrl && (
-            <Text style={styles.url} numberOfLines={1}>
-              {productionUrl}
-            </Text>
+          <View style={styles.meta}>
+            {project.framework && (
+              <>
+                <Text style={styles.metaText}>{project.framework}</Text>
+                <View style={styles.dot} />
+              </>
+            )}
+            <Text style={styles.metaText}>{formatDate(project.createdAt)}</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={colors.gray[600]} />
+      </View>
+
+      {project.latestDeployments && project.latestDeployments.length > 0 && (
+        <View style={styles.footer}>
+          <View style={[
+            styles.statusDot,
+            { backgroundColor: project.latestDeployments[0].state === 'READY' ? colors.success : colors.warning }
+          ]} />
+          <Text style={styles.footerText}>
+            {project.latestDeployments[0].state === 'READY' ? 'Production' : project.latestDeployments[0].state}
+          </Text>
+          {project.link?.url && (
+            <>
+              <View style={styles.dot} />
+              <Text style={styles.footerLink} numberOfLines={1}>
+                {project.link.url}
+              </Text>
+            </>
           )}
         </View>
-      </View>
-      
-      <View style={styles.footer}>
-        <View style={styles.infoRow}>
-          {project.framework && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{project.framework}</Text>
-            </View>
-          )}
-          {project.link && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>🔗 Git</Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.date}>{formatDate(project.createdAt)}</Text>
-      </View>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#000',
-    borderRadius: 8,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#333',
-    padding: 16,
-    marginBottom: 12,
-    width: width - 32,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: spacing.sm,
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 8,
-    backgroundColor: '#111',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.gray[900],
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border.default,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  icon: {
-    fontSize: 20,
-    color: '#fff',
-  },
-  titleContainer: {
+  headerContent: {
     flex: 1,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 4,
+  name: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.foreground,
+    marginBottom: 2,
+    letterSpacing: -0.2,
   },
-  url: {
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  metaText: {
     fontSize: 12,
-    color: '#888',
+    color: colors.gray[500],
+    letterSpacing: -0.2,
+  },
+  dot: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.gray[700],
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
   },
-  infoRow: {
-    flexDirection: 'row',
-    gap: 8,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  badge: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  badgeText: {
-    fontSize: 11,
-    color: '#888',
-  },
-  date: {
+  footerText: {
     fontSize: 12,
-    color: '#666',
+    color: colors.gray[400],
+    letterSpacing: -0.2,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: colors.gray[500],
+    flex: 1,
+    letterSpacing: -0.2,
   },
 });
-
