@@ -6,11 +6,11 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
-  TouchableOpacity,
-  Linking,
 } from 'react-native';
+import { colors, spacing } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
+import { DomainCard } from '../components/DomainCard';
 import { VercelDomain } from '../types';
 
 export const DomainsScreen = ({ navigation }: any) => {
@@ -47,40 +47,14 @@ export const DomainsScreen = ({ navigation }: any) => {
   }, [api]);
 
   const renderDomain = ({ item }: { item: VercelDomain }) => (
-    <View style={styles.card}>
-      <TouchableOpacity
-        onPress={() => Linking.openURL(`https://${item.name}`)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.domainName}>{item.name}</Text>
-          {item.verified && (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>✓ Verified</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-      
-      <View style={styles.cardFooter}>
-        <View style={{ flexDirection: 'row', gap: 8, flex: 1 }}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{item.serviceType}</Text>
-          </View>
-          {item.cdnEnabled && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>CDN Enabled</Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          style={styles.dnsButton}
-          onPress={() => navigation.navigate('DNSRecords', { domain: item.name })}
-        >
-          <Text style={styles.dnsButtonText}>DNS →</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <DomainCard
+      domain={item}
+      onPress={() => {
+        // Could navigate to domain details screen
+        console.log('Domain pressed:', item.name);
+      }}
+      onManageDNS={() => navigation.navigate('DNSRecords', { domain: item.name })}
+    />
   );
 
   if (loading) {
@@ -106,15 +80,17 @@ export const DomainsScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Domains</Text>
-        <Text style={styles.count}>{domains.length} total</Text>
+        <View>
+          <Text style={styles.title}>Domains</Text>
+          <Text style={styles.count}>{domains.length} {domains.length === 1 ? 'domain' : 'domains'}</Text>
+        </View>
       </View>
       
       {domains.length === 0 ? (
         <EmptyState
           icon="globe-outline"
           title="No Domains"
-          message="You don't have any domains configured yet."
+          message="Connect a domain to your Vercel projects"
         />
       ) : (
         <FlatList
@@ -126,7 +102,7 @@ export const DomainsScreen = ({ navigation }: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#fff"
+              tintColor={colors.foreground}
             />
           }
         />

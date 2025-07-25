@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, borderRadius, spacing } from '../theme/colors';
-import { Badge } from './Badge';
 import type { VercelDeployment } from '../types';
 
 interface DeploymentCardProps {
@@ -12,36 +11,29 @@ interface DeploymentCardProps {
 
 export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress }) => {
   const getStateConfig = (state: string) => {
-    const configs: { [key: string]: { variant: 'success' | 'warning' | 'error' | 'gray'; icon: string } } = {
-      READY: { variant: 'success', icon: 'checkmark-circle' },
-      BUILDING: { variant: 'warning', icon: 'time' },
-      ERROR: { variant: 'error', icon: 'close-circle' },
-      QUEUED: { variant: 'gray', icon: 'hourglass' },
-      INITIALIZING: { variant: 'gray', icon: 'ellipsis-horizontal' },
-      CANCELED: { variant: 'gray', icon: 'ban' },
+    const configs: { [key: string]: { color: string; bg: string } } = {
+      READY: { color: colors.success, bg: 'rgba(0, 112, 243, 0.1)' },
+      BUILDING: { color: colors.warning, bg: 'rgba(245, 166, 35, 0.1)' },
+      ERROR: { color: colors.error, bg: 'rgba(238, 0, 0, 0.1)' },
+      QUEUED: { color: colors.gray[600], bg: colors.gray[900] },
+      INITIALIZING: { color: colors.gray[600], bg: colors.gray[900] },
+      CANCELED: { color: colors.gray[600], bg: colors.gray[900] },
     };
     return configs[state] || configs.QUEUED;
   };
 
-  const getTargetIcon = (target?: string) => {
-    if (target === 'production') return 'rocket';
-    if (target === 'preview') return 'eye';
-    return 'git-branch';
-  };
-
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const formatTimeAgo = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
     
-    if (minutes < 1) return 'Just now';
+    if (minutes < 1) return 'now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${Math.floor(days / 7)}w ago`;
   };
 
   const stateConfig = getStateConfig(deployment.state);
@@ -50,57 +42,63 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
     <TouchableOpacity 
       style={styles.card} 
       onPress={onPress}
-      activeOpacity={0.9}
+      activeOpacity={0.7}
     >
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
+      {/* Top Row */}
+      <View style={styles.topRow}>
+        <View style={styles.leftSection}>
           <View style={styles.projectInfo}>
-            <Ionicons 
-              name={getTargetIcon(deployment.target) as any}
-              size={14} 
-              color={colors.gray[500]}
-              style={styles.icon}
-            />
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={styles.projectName} numberOfLines={1}>
               {deployment.name}
             </Text>
-          </View>
-          <Badge label={deployment.state} variant={stateConfig.variant} size="sm" />
-        </View>
-
-        {deployment.meta?.githubCommitMessage && (
-          <Text style={styles.commitMessage} numberOfLines={1}>
-            {deployment.meta.githubCommitMessage}
-          </Text>
-        )}
-
-        <View style={styles.meta}>
-          <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
-          <Text style={styles.metaText}>
-            {deployment.meta?.githubCommitSha?.slice(0, 7) || 'Unknown'}
-          </Text>
-          <View style={styles.dot} />
-          <Text style={styles.metaText}>{formatDate(deployment.created)}</Text>
-          {deployment.target === 'production' && (
-            <>
-              <View style={styles.dot} />
+            {deployment.target === 'production' && (
               <View style={styles.prodBadge}>
                 <Text style={styles.prodText}>PROD</Text>
               </View>
-            </>
+            )}
+          </View>
+          {deployment.meta?.githubCommitMessage && (
+            <Text style={styles.commitMsg} numberOfLines={1}>
+              {deployment.meta.githubCommitMessage}
+            </Text>
           )}
+        </View>
+        <View style={[styles.stateBadge, { backgroundColor: stateConfig.bg }]}>
+          <View style={[styles.stateDot, { backgroundColor: stateConfig.color }]} />
+          <Text style={[styles.stateText, { color: stateConfig.color }]}>
+            {deployment.state}
+          </Text>
         </View>
       </View>
 
-      {deployment.url && (
-        <View style={styles.footer}>
-          <Ionicons name="globe-outline" size={12} color={colors.gray[600]} />
-          <Text style={styles.url} numberOfLines={1}>
-            {deployment.url}
-          </Text>
-          <Ionicons name="open-outline" size={12} color={colors.gray[600]} />
+      {/* Bottom Row */}
+      <View style={styles.bottomRow}>
+        <View style={styles.metaSection}>
+          {deployment.meta?.githubCommitSha && (
+            <View style={styles.metaItem}>
+              <Ionicons name="git-commit-outline" size={11} color={colors.gray[600]} />
+              <Text style={styles.metaText}>
+                {deployment.meta.githubCommitSha.slice(0, 7)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.metaItem}>
+            <Ionicons name="time-outline" size={11} color={colors.gray[600]} />
+            <Text style={styles.metaText}>
+              {formatTimeAgo(deployment.created)}
+            </Text>
+          </View>
         </View>
-      )}
+        <TouchableOpacity 
+          style={styles.viewButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            onPress();
+          }}
+        >
+          <Ionicons name="open-outline" size={14} color={colors.gray[500]} />
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -111,82 +109,87 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    padding: 12,
+    marginBottom: 8,
+    gap: 10,
   },
-  header: {
-    gap: spacing.xs,
-  },
-  titleRow: {
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  leftSection: {
+    flex: 1,
+    gap: 4,
   },
   projectInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: 6,
   },
-  icon: {
-    marginRight: spacing.xs,
-  },
-  name: {
+  projectName: {
     fontSize: 14,
     fontWeight: '500',
     color: colors.foreground,
     letterSpacing: -0.2,
     flex: 1,
   },
-  commitMessage: {
-    fontSize: 12,
-    color: colors.gray[400],
-    letterSpacing: -0.2,
-    marginTop: 2,
+  prodBadge: {
+    backgroundColor: colors.accent.blue,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 3,
   },
-  meta: {
+  prodText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.foreground,
+    letterSpacing: 0.3,
+  },
+  commitMsg: {
+    fontSize: 12,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
+  },
+  stateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  stateDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  stateText: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: -0.1,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  metaSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   metaText: {
     fontSize: 11,
     color: colors.gray[600],
     letterSpacing: -0.2,
   },
-  dot: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.gray[700],
-  },
-  prodBadge: {
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 2,
-    backgroundColor: colors.accent.blue,
-  },
-  prodText: {
-    fontSize: 9,
-    fontWeight: '600',
-    color: colors.foreground,
-    letterSpacing: 0.5,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.default,
-  },
-  url: {
-    fontSize: 11,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
-    flex: 1,
-    fontFamily: 'monospace',
+  viewButton: {
+    padding: 4,
   },
 });
