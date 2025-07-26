@@ -11,14 +11,18 @@ import { colors, spacing } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
+import { GlobalSearch } from '../components/GlobalSearch';
+import { FloatingActionButton } from '../components/FloatingActionButton';
 import { VercelProject } from '../types';
 
 export const ProjectsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
   const [projects, setProjects] = useState<VercelProject[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<VercelProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchProjects = async (isRefreshing = false) => {
     if (!api) return;
@@ -29,6 +33,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
       
       const response = await api.getProjects(100);
       setProjects(response.projects);
+      setFilteredProjects(response.projects);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch projects');
     } finally {
@@ -40,6 +45,41 @@ export const ProjectsScreen = ({ navigation }: any) => {
   useEffect(() => {
     fetchProjects();
   }, [api]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredProjects(projects);
+      return;
+    }
+
+    const filtered = projects.filter(project =>
+      project.name.toLowerCase().includes(query.toLowerCase()) ||
+      project.framework?.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredProjects(filtered);
+  };
+
+  const quickActions = [
+    {
+      id: 'new-project',
+      label: 'New Project',
+      icon: 'cube-outline',
+      color: colors.accent.blue,
+      onPress: () => {
+        // Navigate to create project or open Vercel
+      },
+    },
+    {
+      id: 'trigger-deploy',
+      label: 'Trigger Deploy',
+      icon: 'rocket-outline',
+      color: colors.accent.purple,
+      onPress: () => {
+        // Open deploy trigger
+      },
+    },
+  ];
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -75,11 +115,25 @@ export const ProjectsScreen = ({ navigation }: any) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Projects</Text>
-          <Text style={styles.count}>{projects.length} {projects.length === 1 ? 'project' : 'projects'}</Text>
+          <Text style={styles.count}>
+            {searchQuery ? `${filteredProjects.length} of ${projects.length}` : `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`}
+          </Text>
         </View>
       </View>
+
+      <GlobalSearch
+        placeholder="Search projects..."
+        onSearch={handleSearch}
+        showFilters={false}
+      />
       
-      {projects.length === 0 ? (
+      {filteredProjects.length === 0 && projects.length > 0 ? (
+        <EmptyState
+          icon="search-outline"
+          title="No Results"
+          message="No projects match your search"
+        />
+      ) : filteredProjects.length === 0 ? (
         <EmptyState
           icon="cube-outline"
           title="No Projects"
@@ -87,7 +141,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
         />
       ) : (
         <FlatList
-          data={projects}
+          data={filteredProjects}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ProjectCard project={item} onPress={() => handleProjectPress(item)} />
@@ -97,11 +151,13 @@ export const ProjectsScreen = ({ navigation }: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#fff"
+              tintColor={colors.foreground}
             />
           }
         />
       )}
+
+      <FloatingActionButton actions={quickActions} />
     </View>
   );
 };
