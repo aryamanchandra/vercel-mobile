@@ -8,6 +8,8 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { VercelProject, VercelDeployment } from '../types';
 
@@ -68,33 +70,21 @@ export const DashboardScreen = ({ navigation }: any) => {
     fetchDashboardData(true);
   }, [api, teamId]);
 
-  const getDeploymentStateColor = (state: string) => {
-    const colors: { [key: string]: string } = {
-      READY: '#0070f3',
-      BUILDING: '#f5a623',
-      ERROR: '#ff0000',
-      QUEUED: '#888',
-    };
-    return colors[state] || '#888';
-  };
-
   const formatTimeAgo = (timestamp: number) => {
     const now = Date.now();
     const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    
+    if (days === 0) return 'today';
+    if (days === 1) return '1d ago';
+    if (days < 30) return `${days}d ago`;
+    return `${Math.floor(days / 30)}mo ago`;
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size="large" color={colors.foreground} />
       </View>
     );
   }
@@ -102,41 +92,44 @@ export const DashboardScreen = ({ navigation }: any) => {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.foreground} />
       }
     >
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dashboard</Text>
-        <Text style={styles.headerSubtitle}>
-          {teamId ? 'Team Account' : 'Personal Account'}
-        </Text>
+        <Text style={styles.title}>Dashboard</Text>
+        <Text style={styles.accountType}>{teamId ? 'Team Account' : 'Personal Account'}</Text>
       </View>
 
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
+      {/* KPI Cards */}
+      <View style={styles.kpiGrid}>
         <TouchableOpacity
-          style={styles.statCard}
+          style={styles.kpiCard}
           onPress={() => navigation.navigate('ProjectsTab')}
+          activeOpacity={0.7}
         >
-          <Text style={styles.statNumber}>{stats.totalProjects}</Text>
-          <Text style={styles.statLabel}>Projects</Text>
+          <Text style={styles.kpiValue}>{stats.totalProjects}</Text>
+          <Text style={styles.kpiLabel}>Projects</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.statCard}
+          style={styles.kpiCard}
           onPress={() => navigation.navigate('DeploymentsTab')}
+          activeOpacity={0.7}
         >
-          <Text style={styles.statNumber}>{stats.totalDeployments}</Text>
-          <Text style={styles.statLabel}>Deployments</Text>
+          <Text style={styles.kpiValue}>{stats.totalDeployments}</Text>
+          <Text style={styles.kpiLabel}>Deployments</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.statCard}
+          style={styles.kpiCard}
           onPress={() => navigation.navigate('DomainsTab')}
+          activeOpacity={0.7}
         >
-          <Text style={styles.statNumber}>{stats.totalDomains}</Text>
-          <Text style={styles.statLabel}>Domains</Text>
+          <Text style={styles.kpiValue}>{stats.totalDomains}</Text>
+          <Text style={styles.kpiLabel}>Domains</Text>
         </TouchableOpacity>
       </View>
 
@@ -144,21 +137,27 @@ export const DashboardScreen = ({ navigation }: any) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Deployment Status</Text>
         <View style={styles.statusGrid}>
-          <View style={styles.statusCard}>
-            <View style={[styles.statusDot, { backgroundColor: '#0070f3' }]} />
-            <Text style={styles.statusNumber}>{stats.readyDeployments}</Text>
+          <TouchableOpacity style={styles.statusCard} activeOpacity={0.7}>
+            <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
+            <Text style={styles.statusValue}>{stats.readyDeployments}</Text>
             <Text style={styles.statusLabel}>Ready</Text>
-          </View>
-          <View style={styles.statusCard}>
-            <View style={[styles.statusDot, { backgroundColor: '#f5a623' }]} />
-            <Text style={styles.statusNumber}>{stats.buildingDeployments}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.statusCard} activeOpacity={0.7}>
+            <View style={[styles.statusDot, { backgroundColor: colors.warning }]} />
+            <Text style={styles.statusValue}>{stats.buildingDeployments}</Text>
             <Text style={styles.statusLabel}>Building</Text>
-          </View>
-          <View style={styles.statusCard}>
-            <View style={[styles.statusDot, { backgroundColor: '#ff0000' }]} />
-            <Text style={styles.statusNumber}>{stats.errorDeployments}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.statusCard} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('DeploymentsTab')}
+          >
+            <View style={[styles.statusDot, { backgroundColor: colors.error }]} />
+            <Text style={styles.statusValue}>{stats.errorDeployments}</Text>
             <Text style={styles.statusLabel}>Errors</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -167,27 +166,31 @@ export const DashboardScreen = ({ navigation }: any) => {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Projects</Text>
           <TouchableOpacity onPress={() => navigation.navigate('ProjectsTab')}>
-            <Text style={styles.viewAllText}>View All →</Text>
+            <Text style={styles.viewAll}>View All →</Text>
           </TouchableOpacity>
         </View>
+
         {recentProjects.map((project) => (
           <TouchableOpacity
             key={project.id}
-            style={styles.projectCard}
+            style={styles.projectRow}
             onPress={() => navigation.navigate('ProjectDetail', { project })}
+            activeOpacity={0.7}
           >
             <View style={styles.projectIcon}>
               <Text style={styles.projectIconText}>
-                {project.framework?.charAt(0) || '◆'}
+                {project.name.charAt(0).toLowerCase()}
               </Text>
             </View>
             <View style={styles.projectInfo}>
-              <Text style={styles.projectName}>{project.name}</Text>
+              <Text style={styles.projectName} numberOfLines={1}>
+                {project.name}
+              </Text>
               <Text style={styles.projectMeta}>
-                {project.framework || 'No framework'} • {formatTimeAgo(project.createdAt)}
+                {project.framework || 'nextjs'} · {formatTimeAgo(project.createdAt)}
               </Text>
             </View>
-            <Text style={styles.projectArrow}>→</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.gray[600]} />
           </TouchableOpacity>
         ))}
       </View>
@@ -197,53 +200,32 @@ export const DashboardScreen = ({ navigation }: any) => {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Deployments</Text>
           <TouchableOpacity onPress={() => navigation.navigate('DeploymentsTab')}>
-            <Text style={styles.viewAllText}>View All →</Text>
+            <Text style={styles.viewAll}>View All →</Text>
           </TouchableOpacity>
         </View>
+
         {recentDeployments.map((deployment) => (
           <TouchableOpacity
             key={deployment.uid}
-            style={styles.deploymentCard}
+            style={styles.deploymentRow}
             onPress={() => navigation.navigate('DeploymentDetail', { deployment })}
+            activeOpacity={0.7}
           >
-            <View style={[styles.deploymentDot, { backgroundColor: getDeploymentStateColor(deployment.state) }]} />
+            <View style={[
+              styles.deploymentDot,
+              { backgroundColor: deployment.state === 'READY' ? colors.success : deployment.state === 'BUILDING' ? colors.warning : colors.error }
+            ]} />
             <View style={styles.deploymentInfo}>
-              <Text style={styles.deploymentName}>{deployment.name}</Text>
+              <Text style={styles.deploymentName} numberOfLines={1}>
+                {deployment.name}
+              </Text>
               <Text style={styles.deploymentMeta}>
-                {deployment.state} • {formatTimeAgo(deployment.created)}
+                {deployment.state} · {formatTimeAgo(deployment.created)}
               </Text>
             </View>
-            <Text style={styles.deploymentArrow}>→</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.gray[600]} />
           </TouchableOpacity>
         ))}
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('DeploymentsTab')}
-          >
-            <Text style={styles.quickActionIcon}>🚀</Text>
-            <Text style={styles.quickActionText}>View Deployments</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('DomainsTab')}
-          >
-            <Text style={styles.quickActionIcon}>🌐</Text>
-            <Text style={styles.quickActionText}>Manage Domains</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('SettingsTab')}
-          >
-            <Text style={styles.quickActionIcon}>⚙️</Text>
-            <Text style={styles.quickActionText}>Settings</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </ScrollView>
   );
@@ -252,72 +234,83 @@ export const DashboardScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingBottom: spacing.xxl,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
   },
-  headerTitle: {
+  title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -0.8,
+    marginBottom: spacing.xs,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 4,
+  accountType: {
+    fontSize: 13,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
-  statsGrid: {
+  kpiGrid: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: spacing.md,
     gap: 12,
+    marginBottom: spacing.lg,
   },
-  statCard: {
+  kpiCard: {
     flex: 1,
-    backgroundColor: '#111',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.gray[950],
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  statNumber: {
-    fontSize: 32,
+  kpiValue: {
+    fontSize: 40,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -1,
+    marginBottom: spacing.xs,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+  kpiLabel: {
+    fontSize: 13,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
   section: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#111',
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -0.3,
   },
-  viewAllText: {
+  viewAll: {
     fontSize: 14,
-    color: '#0070f3',
+    color: colors.accent.blue,
+    fontWeight: '500',
+    letterSpacing: -0.2,
   },
   statusGrid: {
     flexDirection: 'row',
@@ -325,83 +318,86 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     flex: 1,
-    backgroundColor: '#111',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: colors.gray[950],
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     alignItems: 'center',
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-  statusNumber: {
-    fontSize: 24,
+  statusValue: {
+    fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -0.8,
+    marginBottom: 2,
   },
   statusLabel: {
-    fontSize: 11,
-    color: '#888',
-    marginTop: 4,
+    fontSize: 12,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
-  projectCard: {
+  projectRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: colors.gray[950],
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: 12,
     marginBottom: 8,
   },
   projectIcon: {
     width: 40,
     height: 40,
-    borderRadius: 8,
-    backgroundColor: '#000',
-    justifyContent: 'center',
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border.default,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   projectIconText: {
-    fontSize: 18,
-    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.foreground,
   },
   projectInfo: {
     flex: 1,
   },
   projectName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '500',
+    color: colors.foreground,
+    letterSpacing: -0.2,
+    marginBottom: 2,
   },
   projectMeta: {
-    fontSize: 11,
-    color: '#888',
-    marginTop: 2,
+    fontSize: 12,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
-  projectArrow: {
-    fontSize: 16,
-    color: '#666',
-  },
-  deploymentCard: {
+  deploymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: colors.gray[950],
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    padding: 12,
     marginBottom: 8,
   },
   deploymentDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     marginRight: 12,
   },
   deploymentInfo: {
@@ -409,39 +405,14 @@ const styles = StyleSheet.create({
   },
   deploymentName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '500',
+    color: colors.foreground,
+    letterSpacing: -0.2,
+    marginBottom: 2,
   },
   deploymentMeta: {
-    fontSize: 11,
-    color: '#888',
-    marginTop: 2,
-  },
-  deploymentArrow: {
-    fontSize: 16,
-    color: '#666',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  quickActionCard: {
-    flex: 1,
-    backgroundColor: '#111',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#222',
-    alignItems: 'center',
-  },
-  quickActionIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  quickActionText: {
-    fontSize: 11,
-    color: '#888',
-    textAlign: 'center',
+    fontSize: 12,
+    color: colors.gray[500],
+    letterSpacing: -0.2,
   },
 });
-
