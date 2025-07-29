@@ -5,14 +5,14 @@ import {
   StyleSheet,
   FlatList,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
-import { colors, spacing } from '../theme/colors';
+import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { FloatingActionButton } from '../components/FloatingActionButton';
+import { SkeletonList } from '../components/SkeletonLoader';
 import { VercelProject } from '../types';
 
 export const ProjectsScreen = ({ navigation }: any) => {
@@ -92,8 +92,19 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#fff" />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>Projects</Text>
+            <Text style={styles.count}>Loading...</Text>
+          </View>
+        </View>
+        <GlobalSearch
+          placeholder="Search projects..."
+          onSearch={handleSearch}
+          showFilters={false}
+        />
+        <SkeletonList count={5} />
       </View>
     );
   }
@@ -167,14 +178,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
   header: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.base,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     backgroundColor: colors.background,
@@ -182,19 +187,19 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border.default,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: typography.sizes.xxxxl,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: -0.5,
+    letterSpacing: typography.letterSpacing.tight,
     marginBottom: spacing.xs,
   },
   count: {
-    fontSize: 13,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   listContent: {
-    padding: spacing.md,
+    padding: spacing.base,
   },
 });
 

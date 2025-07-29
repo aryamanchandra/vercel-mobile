@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
+import { colors, typography, spacing } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
@@ -34,24 +34,24 @@ const TabNavigator = () => {
         },
         headerTintColor: colors.foreground,
         headerTitleStyle: {
-          fontWeight: '700',
-          fontSize: 17,
-          letterSpacing: -0.3,
+          fontWeight: typography.weights.bold,
+          fontSize: typography.sizes.lg + 1,
+          letterSpacing: typography.letterSpacing.tight,
         },
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopWidth: 1,
           borderTopColor: colors.border.default,
           height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          paddingBottom: spacing.sm,
+          paddingTop: spacing.sm,
         },
         tabBarActiveTintColor: colors.foreground,
         tabBarInactiveTintColor: colors.gray[600],
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-          letterSpacing: -0.2,
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.medium,
+          letterSpacing: typography.letterSpacing.normal,
         },
         headerShown: false,
       }}
