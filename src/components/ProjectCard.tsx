@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 import type { VercelProject } from '../types';
@@ -7,10 +7,35 @@ import type { VercelProject } from '../types';
 interface ProjectCardProps {
   project: VercelProject;
   onPress: () => void;
+  tags?: string[];
+  onRedeploy?: () => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags = [], onRedeploy }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [isLive, setIsLive] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if site is live
+    checkSiteStatus();
+  }, [project.link?.url]);
+
+  const checkSiteStatus = async () => {
+    if (!project.link?.url) {
+      setIsLive(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://${project.link.url}`, {
+        method: 'HEAD',
+        timeout: 5000,
+      } as any);
+      setIsLive(response.ok);
+    } catch {
+      setIsLive(false);
+    }
+  };
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -62,7 +87,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
     return `${Math.floor(days / 30)}mo`;
   };
 
-  // Generate color based on project name hash
   const getProjectColor = () => {
     const hash = project.name.split('').reduce((acc, char) => {
       return char.charCodeAt(0) + ((acc << 5) - acc);
@@ -70,6 +94,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
     const colors_list = ['#0070f3', '#7928ca', '#ff0080', '#50e3c2', '#f5a623', '#8b5cf6'];
     return colors_list[Math.abs(hash) % colors_list.length];
   };
+
+  const handleOpenWebsite = (e: any) => {
+    e.stopPropagation();
+    if (project.link?.url) {
+      Linking.openURL(`https://${project.link.url}`);
+    }
+  };
+
+  const handleRedeploy = (e: any) => {
+    e.stopPropagation();
+    if (onRedeploy) {
+      onRedeploy();
+    }
+  };
+
+  const lastDeployment = project.latestDeployments?.[0];
+  const lastCommit = lastDeployment?.meta?.githubCommitMessage;
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -80,8 +121,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        {/* Top Row: Icon, Name, and Arrow */}
-        <View style={styles.row}>
+        {/* Top Row: Icon, Name, Live Status */}
+        <View style={styles.topRow}>
           <View style={[styles.icon, { backgroundColor: getProjectColor() + '20', borderColor: getProjectColor() + '40' }]}>
             <Text style={[styles.iconText, { color: getProjectColor() }]}>
               {project.name.charAt(0).toUpperCase()}
@@ -91,48 +132,92 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
           <View style={styles.nameSection}>
             <View style={styles.nameRow}>
               <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
-              {project.framework && (
-                <View style={styles.frameworkBadge}>
-                  <Text style={styles.frameworkText}>{project.framework}</Text>
+              {isLive !== null && (
+                <View style={[styles.liveBadge, { backgroundColor: isLive ? colors.successBg : colors.errorBg }]}>
+                  <View style={[styles.liveDot, { backgroundColor: isLive ? colors.success : colors.error }]} />
+                  <Text style={[styles.liveText, { color: isLive ? colors.success : colors.error }]}>
+                    {isLive ? 'LIVE' : 'DOWN'}
+                  </Text>
                 </View>
               )}
             </View>
+            {project.framework && (
+              <View style={styles.frameworkBadge}>
+                <Text style={styles.frameworkText}>{project.framework}</Text>
+              </View>
+            )}
           </View>
-          
-          <Ionicons name="chevron-forward" size={18} color={colors.gray[600]} />
         </View>
 
-        {/* Status Row */}
-        <View style={styles.statusRow}>
-          <View style={styles.statusLeft}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
-            <Text style={styles.statusText}>{getStatusText()}</Text>
+        {/* Tags */}
+        {tags.length > 0 && (
+          <View style={styles.tagsRow}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
           </View>
-          {project.latestDeployments && project.latestDeployments.length > 0 && (
-            <Text style={styles.timeText}>
-              {formatTimeAgo(project.latestDeployments[0].created)}
-            </Text>
+        )}
+
+        {/* Status Info */}
+        <View style={styles.infoSection}>
+          <View style={styles.infoRow}>
+            <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
+            <Text style={styles.infoText}>{getStatusText()}</Text>
+          </View>
+          
+          {lastDeployment && (
+            <View style={styles.infoRow}>
+              <Ionicons name="time-outline" size={12} color={colors.gray[600]} />
+              <Text style={styles.infoText}>
+                Deployed {formatTimeAgo(lastDeployment.created)}
+              </Text>
+            </View>
           )}
         </View>
 
-        {/* Domain Row */}
-        {project.link?.url && (
-          <View style={styles.domainRow}>
-            <Ionicons name="globe-outline" size={12} color={colors.gray[600]} />
-            <Text style={styles.domainText} numberOfLines={1}>
-              {project.link.url}
+        {/* Last Commit */}
+        {lastCommit && (
+          <View style={styles.commitRow}>
+            <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
+            <Text style={styles.commitText} numberOfLines={1}>
+              {lastCommit}
             </Text>
-            <TouchableOpacity 
-              style={styles.openButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                // Handle open in browser
-              }}
-            >
-              <Ionicons name="open-outline" size={12} color={colors.gray[500]} />
-            </TouchableOpacity>
           </View>
         )}
+
+        {/* Quick Actions */}
+        <View style={styles.actions}>
+          {project.link?.url && (
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={handleOpenWebsite}
+            >
+              <Ionicons name="open-outline" size={16} color={colors.foreground} />
+              <Text style={styles.actionText}>Open</Text>
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleRedeploy}
+          >
+            <Ionicons name="reload-outline" size={16} color={colors.foreground} />
+            <Text style={styles.actionText}>Redeploy</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onPress();
+            }}
+          >
+            <Ionicons name="settings-outline" size={16} color={colors.foreground} />
+            <Text style={styles.actionText}>Settings</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -140,54 +225,73 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.border.default,
+    borderColor: colors.foreground,
     borderRadius: borderRadius.md,
     padding: spacing.base,
     marginBottom: spacing.md,
-    gap: spacing.sm + 2,
-    ...shadows.sm,
+    gap: spacing.md,
   },
-  row: {
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
   icon: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconText: {
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.semibold,
   },
   nameSection: {
     flex: 1,
+    gap: spacing.xs,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    flexWrap: 'wrap',
   },
   name: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
     letterSpacing: typography.letterSpacing.normal,
-    flex: 1,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.xs,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  liveText: {
+    fontSize: typography.sizes.xs - 1,
+    fontWeight: typography.weights.bold,
+    letterSpacing: typography.letterSpacing.wide,
   },
   frameworkBadge: {
-    backgroundColor: colors.backgroundHover,
+    backgroundColor: colors.backgroundElevated,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: borderRadius.xs,
     borderWidth: 1,
     borderColor: colors.border.default,
+    alignSelf: 'flex-start',
   },
   frameworkText: {
     fontSize: typography.sizes.xs,
@@ -195,47 +299,82 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
   },
-  statusRow: {
+  tagsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
-  statusLeft: {
+  tag: {
+    backgroundColor: colors.accent.blue + '20',
+    borderWidth: 1,
+    borderColor: colors.accent.blue + '40',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.xs,
+  },
+  tagText: {
+    fontSize: typography.sizes.xs,
+    color: colors.accent.blue,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  infoSection: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  statusText: {
+  infoText: {
     fontSize: typography.sizes.sm,
     color: colors.foregroundMuted,
     letterSpacing: typography.letterSpacing.normal,
   },
-  timeText: {
-    fontSize: typography.sizes.xs,
-    color: colors.gray[600],
-    letterSpacing: typography.letterSpacing.normal,
-  },
-  domainRow: {
+  commitRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
   },
-  domainText: {
-    fontSize: typography.sizes.xs,
-    color: colors.gray[500],
-    flex: 1,
-    fontFamily: 'monospace',
+  commitText: {
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
     letterSpacing: typography.letterSpacing.normal,
+    flex: 1,
   },
-  openButton: {
-    padding: spacing.xs / 2,
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  actionText: {
+    fontSize: typography.sizes.sm,
+    color: colors.foreground,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });

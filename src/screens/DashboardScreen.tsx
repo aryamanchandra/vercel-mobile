@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography, shadows } from '../theme/colors';
@@ -84,11 +85,12 @@ export const DashboardScreen = ({ navigation }: any) => {
 
   if (loading) {
     return (
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <SkeletonLoader width="40%" height={32} />
-          <SkeletonLoader width="30%" height={16} style={{ marginTop: spacing.xs }} />
-        </View>
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
+          <View style={styles.header}>
+            <SkeletonLoader width="40%" height={32} />
+            <SkeletonLoader width="30%" height={16} style={{ marginTop: spacing.xs }} />
+          </View>
         <View style={styles.kpiGrid}>
           <View style={styles.kpiCard}>
             <SkeletonLoader width={60} height={40} />
@@ -107,18 +109,19 @@ export const DashboardScreen = ({ navigation }: any) => {
           <SkeletonLoader width="50%" height={18} style={{ marginBottom: spacing.md }} />
           <SkeletonList count={2} />
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.foreground} />
-      }
-    >
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.foreground} />
+        }
+      >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Dashboard</Text>
@@ -249,7 +252,8 @@ export const DashboardScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

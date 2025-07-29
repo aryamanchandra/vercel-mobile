@@ -5,15 +5,23 @@ import {
   StyleSheet,
   FlatList,
   RefreshControl,
+  SafeAreaView,
+  Alert,
 } from 'react-native';
-import { colors, spacing, typography, borderRadius } from '../theme/colors';
+import { colors, spacing, typography } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
 import { GlobalSearch } from '../components/GlobalSearch';
-import { FloatingActionButton } from '../components/FloatingActionButton';
 import { SkeletonList } from '../components/SkeletonLoader';
 import { VercelProject } from '../types';
+
+// Mock tags data - in real app, this would come from API or storage
+const PROJECT_TAGS: { [key: string]: string[] } = {
+  // Add your project IDs and tags here
+  // 'project-id-1': ['personal', 'production'],
+  // 'project-id-2': ['client', 'staging'],
+};
 
 export const ProjectsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
@@ -53,33 +61,16 @@ export const ProjectsScreen = ({ navigation }: any) => {
       return;
     }
 
-    const filtered = projects.filter(project =>
-      project.name.toLowerCase().includes(query.toLowerCase()) ||
-      project.framework?.toLowerCase().includes(query.toLowerCase())
-    );
+    const filtered = projects.filter(project => {
+      const matchesName = project.name.toLowerCase().includes(query.toLowerCase());
+      const matchesFramework = project.framework?.toLowerCase().includes(query.toLowerCase());
+      const matchesTags = PROJECT_TAGS[project.id]?.some(tag => 
+        tag.toLowerCase().includes(query.toLowerCase())
+      );
+      return matchesName || matchesFramework || matchesTags;
+    });
     setFilteredProjects(filtered);
   };
-
-  const quickActions = [
-    {
-      id: 'new-project',
-      label: 'New Project',
-      icon: 'cube-outline',
-      color: colors.accent.blue,
-      onPress: () => {
-        // Navigate to create project or open Vercel
-      },
-    },
-    {
-      id: 'trigger-deploy',
-      label: 'Trigger Deploy',
-      icon: 'rocket-outline',
-      color: colors.accent.purple,
-      onPress: () => {
-        // Open deploy trigger
-      },
-    },
-  ];
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -90,9 +81,52 @@ export const ProjectsScreen = ({ navigation }: any) => {
     navigation.navigate('ProjectDetail', { project });
   };
 
+  const handleRedeploy = async (project: VercelProject) => {
+    if (!api) return;
+
+    Alert.alert(
+      'Redeploy Project',
+      `Are you sure you want to redeploy ${project.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Redeploy',
+          style: 'default',
+          onPress: async () => {
+            try {
+              // Get latest deployment
+              const latestDeployment = project.latestDeployments?.[0];
+              if (!latestDeployment) {
+                Alert.alert('Error', 'No deployment found to redeploy');
+                return;
+              }
+
+              // Trigger redeploy
+              await api.redeployDeployment(latestDeployment.uid);
+              Alert.alert('Success', 'Redeployment triggered successfully');
+              
+              // Refresh projects
+              fetchProjects(true);
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to redeploy');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleAddDeployment = () => {
+    Alert.alert(
+      'Create New Deployment',
+      'This would open a screen to create a new deployment. Feature coming soon!',
+      [{ text: 'OK' }]
+    );
+  };
+
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Projects</Text>
@@ -103,26 +137,28 @@ export const ProjectsScreen = ({ navigation }: any) => {
           placeholder="Search projects..."
           onSearch={handleSearch}
           showFilters={false}
+          showAddButton={true}
+          onAddPress={handleAddDeployment}
         />
         <SkeletonList count={5} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <SafeAreaView style={styles.container}>
         <EmptyState
           icon="alert-circle-outline"
-          title="Error Loading Projects"
+          title="Error"
           message={error}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Projects</Text>
@@ -136,6 +172,8 @@ export const ProjectsScreen = ({ navigation }: any) => {
         placeholder="Search projects..."
         onSearch={handleSearch}
         showFilters={false}
+        showAddButton={true}
+        onAddPress={handleAddDeployment}
       />
       
       {filteredProjects.length === 0 && projects.length > 0 ? (
@@ -155,7 +193,12 @@ export const ProjectsScreen = ({ navigation }: any) => {
           data={filteredProjects}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ProjectCard project={item} onPress={() => handleProjectPress(item)} />
+            <ProjectCard 
+              project={item} 
+              onPress={() => handleProjectPress(item)}
+              tags={PROJECT_TAGS[item.id] || []}
+              onRedeploy={() => handleRedeploy(item)}
+            />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -167,9 +210,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
           }
         />
       )}
-
-      <FloatingActionButton actions={quickActions} />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -180,11 +221,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.default,
   },
   title: {
     fontSize: typography.sizes.xxxxl,
@@ -202,4 +241,3 @@ const styles = StyleSheet.create({
     padding: spacing.base,
   },
 });
-

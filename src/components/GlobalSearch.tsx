@@ -9,12 +9,14 @@ import {
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius, spacing } from '../theme/colors';
+import { colors, borderRadius, spacing, typography } from '../theme/colors';
 
 interface GlobalSearchProps {
   placeholder?: string;
   onSearch: (query: string, filter: SearchFilter) => void;
   showFilters?: boolean;
+  onAddPress?: () => void;
+  showAddButton?: boolean;
 }
 
 export type SearchFilter = 'all' | 'projects' | 'deployments' | 'domains' | 'envvars';
@@ -23,6 +25,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   placeholder = 'Search...',
   onSearch,
   showFilters = true,
+  onAddPress,
+  showAddButton = false,
 }) => {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<SearchFilter>('all');
@@ -51,32 +55,35 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={16} color={colors.gray[500]} style={styles.searchIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={colors.gray[600]}
-          value={query}
-          onChangeText={handleSearch}
-          returnKeyType="search"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {query.length > 0 && (
+      <View style={styles.searchRow}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={18} color={colors.gray[500]} style={styles.searchIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor={colors.gray[600]}
+            value={query}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              onPress={() => handleSearch('')}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={18} color={colors.gray[500]} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {showAddButton && onAddPress && (
           <TouchableOpacity
-            onPress={() => handleSearch('')}
-            style={styles.clearButton}
+            onPress={onAddPress}
+            style={styles.addButton}
           >
-            <Ionicons name="close-circle" size={16} color={colors.gray[500]} />
-          </TouchableOpacity>
-        )}
-        {showFilters && (
-          <TouchableOpacity
-            onPress={() => setShowFilterModal(true)}
-            style={styles.filterButton}
-          >
-            <Ionicons name="options-outline" size={18} color={colors.gray[400]} />
+            <Ionicons name="add" size={24} color={colors.background} />
           </TouchableOpacity>
         )}
       </View>
@@ -100,7 +107,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
               <Ionicons
                 name={filter.icon as any}
                 size={14}
-                color={activeFilter === filter.id ? colors.foreground : colors.gray[500]}
+                color={activeFilter === filter.id ? colors.background : colors.gray[500]}
               />
               <Text
                 style={[
@@ -155,48 +162,59 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.base,
     paddingVertical: spacing.sm,
     backgroundColor: colors.background,
   },
+  searchRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    paddingHorizontal: 12,
-    height: 40,
+    paddingHorizontal: spacing.md,
+    height: 48,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.sizes.md,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   clearButton: {
-    padding: 4,
-    marginRight: 8,
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
   },
-  filterButton: {
-    padding: 4,
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.foreground,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterTabs: {
     marginTop: spacing.sm,
   },
   filterTabsContent: {
-    gap: 8,
+    gap: spacing.sm,
   },
   filterTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: spacing.xs + 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -207,10 +225,10 @@ const styles = StyleSheet.create({
     borderColor: colors.foreground,
   },
   filterTabText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
     color: colors.gray[500],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   filterTabTextActive: {
     color: colors.background,
@@ -221,7 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     padding: spacing.lg,
@@ -233,10 +251,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: -0.3,
+    letterSpacing: typography.letterSpacing.tight,
   },
   filterOption: {
     flexDirection: 'row',
@@ -249,12 +267,11 @@ const styles = StyleSheet.create({
   filterOptionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   filterOptionText: {
-    fontSize: 15,
+    fontSize: typography.sizes.md + 1,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });
-
