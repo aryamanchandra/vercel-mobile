@@ -6,11 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius } from '../theme/colors';
+import { colors, spacing, borderRadius, typography, shadows } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonLoader, SkeletonList } from '../components/SkeletonLoader';
+import { StatusBadge } from '../components/StatusBadge';
 import { VercelProject, VercelDeployment } from '../types';
 
 export const DashboardScreen = ({ navigation }: any) => {
@@ -83,9 +84,30 @@ export const DashboardScreen = ({ navigation }: any) => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.foreground} />
-      </View>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <SkeletonLoader width="40%" height={32} />
+          <SkeletonLoader width="30%" height={16} style={{ marginTop: spacing.xs }} />
+        </View>
+        <View style={styles.kpiGrid}>
+          <View style={styles.kpiCard}>
+            <SkeletonLoader width={60} height={40} />
+            <SkeletonLoader width="60%" height={12} style={{ marginTop: spacing.xs }} />
+          </View>
+          <View style={styles.kpiCard}>
+            <SkeletonLoader width={60} height={40} />
+            <SkeletonLoader width="60%" height={12} style={{ marginTop: spacing.xs }} />
+          </View>
+          <View style={styles.kpiCard}>
+            <SkeletonLoader width={60} height={40} />
+            <SkeletonLoader width="60%" height={12} style={{ marginTop: spacing.xs }} />
+          </View>
+        </View>
+        <View style={styles.section}>
+          <SkeletonLoader width="50%" height={18} style={{ marginBottom: spacing.md }} />
+          <SkeletonList count={2} />
+        </View>
+      </ScrollView>
     );
   }
 
@@ -239,59 +261,54 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xxl,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
   header: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.base,
     paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: -0.8,
+    letterSpacing: typography.letterSpacing.tight,
     marginBottom: spacing.xs,
   },
   accountType: {
-    fontSize: 13,
+    fontSize: typography.sizes.base,
     color: colors.gray[500],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   kpiGrid: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    gap: 12,
+    paddingHorizontal: spacing.base,
+    gap: spacing.md,
     marginBottom: spacing.lg,
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
+    padding: spacing.base,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.sm,
   },
   kpiValue: {
-    fontSize: 40,
-    fontWeight: '700',
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: -1,
+    letterSpacing: typography.letterSpacing.tight,
     marginBottom: spacing.xs,
   },
   kpiLabel: {
-    fontSize: 13,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   section: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.base,
     marginBottom: spacing.xl,
   },
   sectionHeader: {
@@ -301,29 +318,30 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: -0.3,
+    letterSpacing: typography.letterSpacing.tight,
   },
   viewAll: {
-    fontSize: 14,
+    fontSize: typography.sizes.md,
     color: colors.accent.blue,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   statusGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   statusCard: {
     flex: 1,
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    padding: spacing.base,
     alignItems: 'center',
+    ...shadows.sm,
   },
   statusDot: {
     width: 8,
@@ -332,26 +350,27 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   statusValue: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: typography.sizes.xxxxxl,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: -0.8,
+    letterSpacing: typography.letterSpacing.tight,
     marginBottom: 2,
   },
   statusLabel: {
-    fontSize: 12,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   projectRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: 12,
-    marginBottom: 8,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
   },
   projectIcon: {
     width: 40,
@@ -362,57 +381,58 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   projectIconText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
   },
   projectInfo: {
     flex: 1,
   },
   projectName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     marginBottom: 2,
   },
   projectMeta: {
-    fontSize: 12,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   deploymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gray[950],
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: 12,
-    marginBottom: 8,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
   },
   deploymentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: spacing.md,
   },
   deploymentInfo: {
     flex: 1,
   },
   deploymentName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     marginBottom: 2,
   },
   deploymentMeta: {
-    fontSize: 12,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });

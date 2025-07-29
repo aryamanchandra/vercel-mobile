@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius } from '../theme/colors';
+import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 import type { VercelDomain } from '../types';
 
 interface DomainCardProps {
@@ -11,76 +11,99 @@ interface DomainCardProps {
 }
 
 export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManageDNS }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
   const handleOpenDomain = (e: any) => {
     e.stopPropagation();
     Linking.openURL(`https://${domain.name}`);
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.nameSection}>
-          <Ionicons name="globe-outline" size={16} color={colors.foreground} />
-          <Text style={styles.name} numberOfLines={1}>{domain.name}</Text>
-        </View>
-        {domain.verified && (
-          <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark-circle" size={12} color={colors.success} />
-            <Text style={styles.verifiedText}>Verified</Text>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.nameSection}>
+            <Ionicons name="globe-outline" size={16} color={colors.foreground} />
+            <Text style={styles.name} numberOfLines={1}>{domain.name}</Text>
           </View>
-        )}
-      </View>
-
-      {/* Info Row */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Type</Text>
-          <Text style={styles.infoValue}>{domain.serviceType || 'External'}</Text>
+          {domain.verified && (
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={12} color={colors.success} />
+              <Text style={styles.verifiedText}>Verified</Text>
+            </View>
+          )}
         </View>
-        {domain.cdnEnabled && (
-          <View style={styles.cdnBadge}>
-            <Ionicons name="flash" size={10} color={colors.accent.cyan} />
-            <Text style={styles.cdnText}>CDN</Text>
-          </View>
-        )}
-      </View>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleOpenDomain}>
-          <Ionicons name="open-outline" size={14} color={colors.gray[400]} />
-          <Text style={styles.actionText}>Open</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={(e) => {
-            e.stopPropagation();
-            onManageDNS();
-          }}
-        >
-          <Ionicons name="settings-outline" size={14} color={colors.gray[400]} />
-          <Text style={styles.actionText}>DNS</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+        {/* Info Row */}
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Type</Text>
+            <Text style={styles.infoValue}>{domain.serviceType || 'External'}</Text>
+          </View>
+          {domain.cdnEnabled && (
+            <View style={styles.cdnBadge}>
+              <Ionicons name="flash" size={10} color={colors.accent.cyan} />
+              <Text style={styles.cdnText}>CDN</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleOpenDomain}>
+            <Ionicons name="open-outline" size={14} color={colors.foregroundMuted} />
+            <Text style={styles.actionText}>Open</Text>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={(e) => {
+              e.stopPropagation();
+              onManageDNS();
+            }}
+          >
+            <Ionicons name="settings-outline" size={14} color={colors.foregroundMuted} />
+            <Text style={styles.actionText}>DNS</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: 12,
-    marginBottom: 8,
-    gap: 10,
+    padding: spacing.base,
+    marginBottom: spacing.md,
+    gap: spacing.sm + 2,
+    ...shadows.sm,
   },
   header: {
     flexDirection: 'row',
@@ -90,90 +113,89 @@ const styles = StyleSheet.create({
   nameSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
     flex: 1,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     flex: 1,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0, 112, 243, 0.1)',
-    paddingHorizontal: 6,
+    gap: spacing.xs,
+    backgroundColor: colors.successBg,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: borderRadius.xs,
   },
   verifiedText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
     color: colors.success,
-    letterSpacing: -0.1,
+    letterSpacing: typography.letterSpacing.normal,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   infoItem: {
     gap: 2,
   },
   infoLabel: {
-    fontSize: 10,
+    fontSize: typography.sizes.xs,
     color: colors.gray[600],
-    letterSpacing: -0.1,
+    letterSpacing: typography.letterSpacing.normal,
   },
   infoValue: {
-    fontSize: 11,
-    color: colors.gray[400],
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.xs,
+    color: colors.foregroundMuted,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   cdnBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     backgroundColor: 'rgba(80, 227, 194, 0.1)',
-    paddingHorizontal: 6,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: 3,
+    borderRadius: borderRadius.xs,
   },
   cdnText: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: typography.sizes.xs - 1,
+    fontWeight: typography.weights.bold,
     color: colors.accent.cyan,
-    letterSpacing: 0.3,
+    letterSpacing: typography.letterSpacing.wide,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.gray[900],
+    borderTopColor: colors.border.default,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 4,
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   actionText: {
-    fontSize: 12,
-    color: colors.gray[400],
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   divider: {
     width: 1,
     height: 16,
-    backgroundColor: colors.gray[900],
+    backgroundColor: colors.border.default,
   },
 });
-
