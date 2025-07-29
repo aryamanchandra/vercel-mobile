@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius, spacing } from '../theme/colors';
+import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 import type { VercelProject } from '../types';
 
 interface ProjectCardProps {
@@ -10,9 +10,27 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
   const getStatusColor = () => {
     if (!project.latestDeployments || project.latestDeployments.length === 0) {
-      return colors.gray[700];
+      return colors.gray[600];
     }
     const state = project.latestDeployments[0].state;
     if (state === 'READY') return colors.success;
@@ -44,101 +62,138 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress }) =>
     return `${Math.floor(days / 30)}mo`;
   };
 
+  // Generate color based on project name hash
+  const getProjectColor = () => {
+    const hash = project.name.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    const colors_list = ['#0070f3', '#7928ca', '#ff0080', '#50e3c2', '#f5a623', '#8b5cf6'];
+    return colors_list[Math.abs(hash) % colors_list.length];
+  };
+
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      {/* Top Row: Name and Status */}
-      <View style={styles.row}>
-        <View style={styles.nameSection}>
-          <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
-          {project.framework && (
-            <View style={styles.frameworkBadge}>
-              <Text style={styles.frameworkText}>{project.framework}</Text>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        {/* Top Row: Icon, Name, and Arrow */}
+        <View style={styles.row}>
+          <View style={[styles.icon, { backgroundColor: getProjectColor() + '20', borderColor: getProjectColor() + '40' }]}>
+            <Text style={[styles.iconText, { color: getProjectColor() }]}>
+              {project.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          
+          <View style={styles.nameSection}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
+              {project.framework && (
+                <View style={styles.frameworkBadge}>
+                  <Text style={styles.frameworkText}>{project.framework}</Text>
+                </View>
+              )}
             </View>
+          </View>
+          
+          <Ionicons name="chevron-forward" size={18} color={colors.gray[600]} />
+        </View>
+
+        {/* Status Row */}
+        <View style={styles.statusRow}>
+          <View style={styles.statusLeft}>
+            <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
+            <Text style={styles.statusText}>{getStatusText()}</Text>
+          </View>
+          {project.latestDeployments && project.latestDeployments.length > 0 && (
+            <Text style={styles.timeText}>
+              {formatTimeAgo(project.latestDeployments[0].created)}
+            </Text>
           )}
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.gray[600]} />
-      </View>
 
-      {/* Status Row */}
-      <View style={styles.statusRow}>
-        <View style={styles.statusLeft}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
-          <Text style={styles.statusText}>{getStatusText()}</Text>
-        </View>
-        {project.latestDeployments && project.latestDeployments.length > 0 && (
-          <Text style={styles.timeText}>
-            {formatTimeAgo(project.latestDeployments[0].created)}
-          </Text>
+        {/* Domain Row */}
+        {project.link?.url && (
+          <View style={styles.domainRow}>
+            <Ionicons name="globe-outline" size={12} color={colors.gray[600]} />
+            <Text style={styles.domainText} numberOfLines={1}>
+              {project.link.url}
+            </Text>
+            <TouchableOpacity 
+              style={styles.openButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                // Handle open in browser
+              }}
+            >
+              <Ionicons name="open-outline" size={12} color={colors.gray[500]} />
+            </TouchableOpacity>
+          </View>
         )}
-      </View>
-
-      {/* Domain Row */}
-      {project.link?.url && (
-        <View style={styles.domainRow}>
-          <Ionicons name="globe-outline" size={12} color={colors.gray[600]} />
-          <Text style={styles.domainText} numberOfLines={1}>
-            {project.link.url}
-          </Text>
-          <TouchableOpacity 
-            style={styles.openButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              // Handle open in browser
-            }}
-          >
-            <Ionicons name="open-outline" size={12} color={colors.gray[500]} />
-          </TouchableOpacity>
-        </View>
-      )}
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: 12,
-    marginBottom: 8,
-    gap: 8,
+    padding: spacing.base,
+    marginBottom: spacing.md,
+    gap: spacing.sm + 2,
+    ...shadows.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconText: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
   },
   nameSection: {
     flex: 1,
+  },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     flex: 1,
   },
   frameworkBadge: {
-    backgroundColor: colors.gray[900],
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: colors.backgroundHover,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.xs,
     borderWidth: 1,
     borderColor: colors.border.default,
   },
   frameworkText: {
-    fontSize: 10,
+    fontSize: typography.sizes.xs,
     color: colors.gray[500],
-    fontWeight: '500',
-    letterSpacing: -0.1,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   statusRow: {
     flexDirection: 'row',
@@ -148,39 +203,39 @@ const styles = StyleSheet.create({
   statusLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusText: {
-    fontSize: 12,
-    color: colors.gray[400],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   timeText: {
-    fontSize: 11,
+    fontSize: typography.sizes.xs,
     color: colors.gray[600],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   domainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingTop: 8,
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.gray[900],
+    borderTopColor: colors.border.default,
   },
   domainText: {
-    fontSize: 11,
+    fontSize: typography.sizes.xs,
     color: colors.gray[500],
     flex: 1,
     fontFamily: 'monospace',
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   openButton: {
-    padding: 2,
+    padding: spacing.xs / 2,
   },
 });

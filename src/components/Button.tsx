@@ -1,17 +1,26 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
-import { colors, borderRadius, spacing } from '../theme/colors';
+import React, { useRef } from 'react';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Animated,
+  ActivityIndicator,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  loading?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
+  iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
+  style?: any;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -19,147 +28,217 @@ export const Button: React.FC<ButtonProps> = ({
   onPress,
   variant = 'primary',
   size = 'md',
-  loading = false,
   disabled = false,
-  style,
-  textStyle,
+  loading = false,
+  icon,
+  iconPosition = 'left',
   fullWidth = false,
+  style,
 }) => {
-  const getButtonStyle = () => {
-    if (disabled) return styles.buttonDisabled;
-    
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
+  const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return styles.buttonPrimary;
+        return {
+          container: [styles.primaryContainer, disabled && styles.disabled],
+          text: styles.primaryText,
+        };
       case 'secondary':
-        return styles.buttonSecondary;
+        return {
+          container: [styles.secondaryContainer, disabled && styles.disabled],
+          text: styles.secondaryText,
+        };
       case 'danger':
-        return styles.buttonDanger;
+        return {
+          container: [styles.dangerContainer, disabled && styles.disabled],
+          text: styles.dangerText,
+        };
       case 'ghost':
-        return styles.buttonGhost;
+        return {
+          container: [styles.ghostContainer, disabled && styles.disabled],
+          text: styles.ghostText,
+        };
       default:
-        return styles.buttonPrimary;
+        return {
+          container: styles.primaryContainer,
+          text: styles.primaryText,
+        };
     }
   };
 
-  const getTextStyle = () => {
-    switch (variant) {
-      case 'primary':
-        return styles.textPrimary;
-      case 'secondary':
-        return styles.textSecondary;
-      case 'danger':
-        return styles.textDanger;
-      case 'ghost':
-        return styles.textGhost;
-      default:
-        return styles.textPrimary;
-    }
-  };
-
-  const getSizeStyle = () => {
+  const getSizeStyles = () => {
     switch (size) {
       case 'sm':
-        return styles.sizeSm;
+        return {
+          container: styles.smContainer,
+          text: styles.smText,
+          iconSize: 16,
+        };
       case 'md':
-        return styles.sizeMd;
+        return {
+          container: styles.mdContainer,
+          text: styles.mdText,
+          iconSize: 18,
+        };
       case 'lg':
-        return styles.sizeLg;
+        return {
+          container: styles.lgContainer,
+          text: styles.lgText,
+          iconSize: 20,
+        };
       default:
-        return styles.sizeMd;
+        return {
+          container: styles.mdContainer,
+          text: styles.mdText,
+          iconSize: 18,
+        };
     }
   };
 
+  const variantStyles = getVariantStyles();
+  const sizeStyles = getSizeStyles();
+  const isDisabled = disabled || loading;
+
   return (
-    <TouchableOpacity
-      style={[
-        styles.button,
-        getButtonStyle(),
-        getSizeStyle(),
-        fullWidth && styles.fullWidth,
-        style,
-      ]}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.8}
-    >
-      {loading ? (
-        <ActivityIndicator 
-          color={variant === 'primary' ? colors.background : colors.foreground} 
-          size="small" 
-        />
-      ) : (
-        <Text style={[styles.text, getTextStyle(), textStyle]}>{title}</Text>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, fullWidth && { width: '100%' }]}>
+      <TouchableOpacity
+        style={[
+          styles.base,
+          variantStyles.container,
+          sizeStyles.container,
+          fullWidth && styles.fullWidth,
+          style,
+        ]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isDisabled}
+        activeOpacity={0.9}
+      >
+        {loading ? (
+          <ActivityIndicator 
+            size="small" 
+            color={variant === 'primary' ? colors.background : colors.foreground} 
+          />
+        ) : (
+          <View style={styles.content}>
+            {icon && iconPosition === 'left' && (
+              <Ionicons 
+                name={icon} 
+                size={sizeStyles.iconSize} 
+                color={variantStyles.text.color} 
+                style={{ marginRight: spacing.xs }}
+              />
+            )}
+            <Text style={[variantStyles.text, sizeStyles.text]}>{title}</Text>
+            {icon && iconPosition === 'right' && (
+              <Ionicons 
+                name={icon} 
+                size={sizeStyles.iconSize} 
+                color={variantStyles.text.color} 
+                style={{ marginLeft: spacing.xs }}
+              />
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    borderRadius: borderRadius.sm,
+  base: {
+    borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.sm,
+  },
+  content: {
     flexDirection: 'row',
-  },
-  buttonPrimary: {
-    backgroundColor: colors.foreground,
-    borderWidth: 1,
-    borderColor: colors.foreground,
-  },
-  buttonSecondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.border.default,
-  },
-  buttonDanger: {
-    backgroundColor: colors.error,
-    borderWidth: 1,
-    borderColor: colors.error,
-  },
-  buttonGhost: {
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-  },
-  buttonDisabled: {
-    backgroundColor: colors.gray[900],
-    borderWidth: 1,
-    borderColor: colors.gray[800],
-    opacity: 0.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   fullWidth: {
     width: '100%',
   },
-  sizeSm: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  
+  // Size variants
+  smContainer: {
     height: 32,
+    paddingHorizontal: spacing.md,
   },
-  sizeMd: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+  smText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  mdContainer: {
     height: 40,
+    paddingHorizontal: spacing.base,
   },
-  sizeLg: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+  mdText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  lgContainer: {
     height: 48,
+    paddingHorizontal: spacing.lg,
   },
-  text: {
-    fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+  lgText: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
+    letterSpacing: typography.letterSpacing.normal,
   },
-  textPrimary: {
+  
+  // Variant styles
+  primaryContainer: {
+    backgroundColor: colors.foreground,
+    borderWidth: 0,
+  },
+  primaryText: {
     color: colors.background,
   },
-  textSecondary: {
+  secondaryContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  secondaryText: {
     color: colors.foreground,
   },
-  textDanger: {
+  dangerContainer: {
+    backgroundColor: colors.error,
+    borderWidth: 0,
+  },
+  dangerText: {
     color: colors.foreground,
   },
-  textGhost: {
-    color: colors.gray[400],
+  ghostContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  ghostText: {
+    color: colors.foregroundMuted,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

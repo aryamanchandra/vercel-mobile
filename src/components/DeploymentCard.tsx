@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius, spacing } from '../theme/colors';
+import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
+import { StatusBadge } from './StatusBadge';
 import type { VercelDeployment } from '../types';
 
 interface DeploymentCardProps {
@@ -10,16 +11,22 @@ interface DeploymentCardProps {
 }
 
 export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress }) => {
-  const getStateConfig = (state: string) => {
-    const configs: { [key: string]: { color: string; bg: string } } = {
-      READY: { color: colors.success, bg: 'rgba(0, 112, 243, 0.1)' },
-      BUILDING: { color: colors.warning, bg: 'rgba(245, 166, 35, 0.1)' },
-      ERROR: { color: colors.error, bg: 'rgba(238, 0, 0, 0.1)' },
-      QUEUED: { color: colors.gray[600], bg: colors.gray[900] },
-      INITIALIZING: { color: colors.gray[600], bg: colors.gray[900] },
-      CANCELED: { color: colors.gray[600], bg: colors.gray[900] },
-    };
-    return configs[state] || configs.QUEUED;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
   };
 
   const formatTimeAgo = (timestamp: number) => {
@@ -36,160 +43,154 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
     return `${Math.floor(days / 7)}w ago`;
   };
 
-  const stateConfig = getStateConfig(deployment.state);
+  const getStateColor = (state: string) => {
+    if (state === 'READY') return colors.success;
+    if (state === 'BUILDING') return colors.warning;
+    if (state === 'ERROR') return colors.error;
+    return colors.gray[600];
+  };
 
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      {/* Top Row */}
-      <View style={styles.topRow}>
-        <View style={styles.leftSection}>
-          <View style={styles.projectInfo}>
-            <Text style={styles.projectName} numberOfLines={1}>
-              {deployment.name}
-            </Text>
-            {deployment.target === 'production' && (
-              <View style={styles.prodBadge}>
-                <Text style={styles.prodText}>PROD</Text>
-              </View>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        {/* Top Row */}
+        <View style={styles.topRow}>
+          <View style={styles.leftSection}>
+            <View style={styles.projectInfo}>
+              <Text style={styles.projectName} numberOfLines={1}>
+                {deployment.name}
+              </Text>
+              {deployment.target === 'production' && (
+                <View style={styles.prodBadge}>
+                  <Text style={styles.prodText}>PROD</Text>
+                </View>
+              )}
+            </View>
+            {deployment.meta?.githubCommitMessage && (
+              <Text style={styles.commitMsg} numberOfLines={1}>
+                {deployment.meta.githubCommitMessage}
+              </Text>
             )}
           </View>
-          {deployment.meta?.githubCommitMessage && (
-            <Text style={styles.commitMsg} numberOfLines={1}>
-              {deployment.meta.githubCommitMessage}
-            </Text>
-          )}
+          <StatusBadge 
+            status={deployment.state as any} 
+            size="sm" 
+            showIcon={false}
+          />
         </View>
-        <View style={[styles.stateBadge, { backgroundColor: stateConfig.bg }]}>
-          <View style={[styles.stateDot, { backgroundColor: stateConfig.color }]} />
-          <Text style={[styles.stateText, { color: stateConfig.color }]}>
-            {deployment.state}
-          </Text>
-        </View>
-      </View>
 
-      {/* Bottom Row */}
-      <View style={styles.bottomRow}>
-        <View style={styles.metaSection}>
-          {deployment.meta?.githubCommitSha && (
+        {/* Bottom Row */}
+        <View style={styles.bottomRow}>
+          <View style={styles.metaSection}>
+            {deployment.meta?.githubCommitSha && (
+              <View style={styles.metaItem}>
+                <Ionicons name="git-commit-outline" size={11} color={colors.gray[600]} />
+                <Text style={styles.metaText}>
+                  {deployment.meta.githubCommitSha.slice(0, 7)}
+                </Text>
+              </View>
+            )}
             <View style={styles.metaItem}>
-              <Ionicons name="git-commit-outline" size={11} color={colors.gray[600]} />
+              <Ionicons name="time-outline" size={11} color={colors.gray[600]} />
               <Text style={styles.metaText}>
-                {deployment.meta.githubCommitSha.slice(0, 7)}
+                {formatTimeAgo(deployment.created)}
               </Text>
             </View>
-          )}
-          <View style={styles.metaItem}>
-            <Ionicons name="time-outline" size={11} color={colors.gray[600]} />
-            <Text style={styles.metaText}>
-              {formatTimeAgo(deployment.created)}
-            </Text>
           </View>
+          <TouchableOpacity 
+            style={styles.viewButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onPress();
+            }}
+          >
+            <Ionicons name="open-outline" size={14} color={colors.gray[500]} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={styles.viewButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onPress();
-          }}
-        >
-          <Ionicons name="open-outline" size={14} color={colors.gray[500]} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: 12,
-    marginBottom: 8,
-    gap: 10,
+    padding: spacing.base,
+    marginBottom: spacing.md,
+    gap: spacing.sm + 2,
+    ...shadows.sm,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: spacing.sm + 2,
   },
   leftSection: {
     flex: 1,
-    gap: 4,
+    gap: spacing.xs,
   },
   projectInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
   },
   projectName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     flex: 1,
   },
   prodBadge: {
     backgroundColor: colors.accent.blue,
-    paddingHorizontal: 5,
+    paddingHorizontal: spacing.sm - 1,
     paddingVertical: 2,
-    borderRadius: 3,
+    borderRadius: borderRadius.xs,
   },
   prodText: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: typography.sizes.xs - 1,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: 0.3,
+    letterSpacing: typography.letterSpacing.wide,
   },
   commitMsg: {
-    fontSize: 12,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
-  },
-  stateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  stateDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  stateText: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: -0.1,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
   },
   metaSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   metaText: {
-    fontSize: 11,
+    fontSize: typography.sizes.xs,
     color: colors.gray[600],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   viewButton: {
-    padding: 4,
+    padding: spacing.xs,
   },
 });
