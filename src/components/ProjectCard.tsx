@@ -46,20 +46,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
   }, [projectUrl]);
 
   const checkSiteStatus = async () => {
-    if (!projectUrl) {
+    // Check deployment state from Vercel instead of HEAD request
+    // HEAD requests can fail due to CORS, timeout, etc. even if site is live
+    if (!project.latestDeployments || project.latestDeployments.length === 0) {
       setIsLive(null);
       return;
     }
 
-    try {
-      const response = await fetch(`https://${projectUrl}`, {
-        method: 'HEAD',
-        timeout: 5000,
-      } as any);
-      setIsLive(response.ok);
-    } catch {
-      setIsLive(false);
-    }
+    const latestDeployment = project.latestDeployments[0];
+    // If deployment state is READY and has a URL, it's live
+    setIsLive(latestDeployment.state === 'READY' && !!projectUrl);
   };
 
   const handlePressIn = () => {
@@ -178,11 +174,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
                 </View>
               )}
             </View>
-            {project.framework && (
-              <View style={styles.frameworkBadge}>
-                <Text style={styles.frameworkText}>{project.framework}</Text>
-              </View>
-            )}
           </View>
         </View>
 

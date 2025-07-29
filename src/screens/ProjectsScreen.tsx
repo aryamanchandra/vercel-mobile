@@ -7,8 +7,13 @@ import {
   RefreshControl,
   SafeAreaView,
   Alert,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import { colors, spacing, typography } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { EmptyState } from '../components/EmptyState';
@@ -31,6 +36,8 @@ export const ProjectsScreen = ({ navigation }: any) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [deployingProject, setDeployingProject] = useState<string | null>(null);
 
   const fetchProjects = async (isRefreshing = false) => {
     if (!api) return;
@@ -117,11 +124,40 @@ export const ProjectsScreen = ({ navigation }: any) => {
   };
 
   const handleAddDeployment = () => {
-    Alert.alert(
-      'Create New Deployment',
-      'This would open a screen to create a new deployment. Feature coming soon!',
-      [{ text: 'OK' }]
-    );
+    setShowDeployModal(true);
+  };
+
+  const triggerDeployment = async (projectId: string, projectName: string) => {
+    if (!api) return;
+
+    setDeployingProject(projectId);
+    try {
+      // Get the latest deployment to use as a base
+      const project = projects.find(p => p.id === projectId);
+      if (!project || !project.latestDeployments || project.latestDeployments.length === 0) {
+        Alert.alert('Error', 'No previous deployments found for this project.');
+        setDeployingProject(null);
+        return;
+      }
+
+      const latestDeployment = project.latestDeployments[0];
+      
+      // Trigger a redeploy using the latest deployment UID
+      await api.redeployDeployment(latestDeployment.uid);
+      
+      Alert.alert(
+        'Success',
+        `Deployment triggered for ${projectName}!`,
+        [{ text: 'OK' }]
+      );
+      
+      setShowDeployModal(false);
+      fetchProjects(true); // Refresh projects to show new deployment
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to create deployment');
+    } finally {
+      setDeployingProject(null);
+    }
   };
 
   if (loading) {
@@ -210,6 +246,50 @@ export const ProjectsScreen = ({ navigation }: any) => {
           }
         />
       )}
+
+      {/* Create Deployment Modal */}
+      <Modal
+        visible={showDeployModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDeployModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Deployment</Text>
+              <TouchableOpacity onPress={() => setShowDeployModal(false)}>
+                <Ionicons name="close" size={24} color={colors.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Select a project to deploy
+            </Text>
+
+            <ScrollView style={styles.projectList}>
+              {projects.map((project) => (
+                <TouchableOpacity
+                  key={project.id}
+                  style={styles.projectOption}
+                  onPress={() => triggerDeployment(project.id, project.name)}
+                  disabled={deployingProject !== null}
+                >
+                  <View style={styles.projectOptionLeft}>
+                    <Ionicons name="cube-outline" size={20} color={colors.foreground} />
+                    <Text style={styles.projectOptionText}>{project.name}</Text>
+                  </View>
+                  {deployingProject === project.id ? (
+                    <ActivityIndicator size="small" color={colors.foreground} />
+                  ) : (
+                    <Ionicons name="chevron-forward" size={20} color={colors.gray[600]} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -239,5 +319,58 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.base,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.backgroundElevated,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
+    padding: spacing.lg,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
+    color: colors.foreground,
+    letterSpacing: typography.letterSpacing.tight,
+  },
+  modalSubtitle: {
+    fontSize: typography.sizes.md,
+    color: colors.gray[500],
+    marginBottom: spacing.lg,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  projectList: {
+    maxHeight: 400,
+  },
+  projectOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+  },
+  projectOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  projectOptionText: {
+    fontSize: typography.sizes.md + 1,
+    color: colors.foreground,
+    letterSpacing: typography.letterSpacing.normal,
+    flex: 1,
   },
 });
