@@ -74,17 +74,21 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
   };
 
   const formatTimeAgo = (timestamp: number) => {
+    if (!timestamp || isNaN(timestamp)) return 'recently';
+    
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    if (diff < 0) return 'just now';
     if (minutes < 1) return 'now';
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 30) return `${days}d`;
-    return `${Math.floor(days / 30)}mo`;
+    if (days < 365) return `${Math.floor(days / 30)}mo`;
+    return `${Math.floor(days / 365)}y`;
   };
 
   const getProjectColor = () => {
@@ -189,15 +193,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
 
         {/* Quick Actions */}
         <View style={styles.actions}>
-          {project.link?.url && (
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={handleOpenWebsite}
-            >
-              <Ionicons name="open-outline" size={16} color={colors.foreground} />
-              <Text style={styles.actionText}>Open</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            style={[styles.actionButton, !project.link?.url && styles.actionButtonDisabled]}
+            onPress={handleOpenWebsite}
+            disabled={!project.link?.url}
+          >
+            <Ionicons name="open-outline" size={16} color={project.link?.url ? colors.foreground : colors.gray[600]} />
+            <Text style={[styles.actionText, !project.link?.url && styles.actionTextDisabled]}>Open</Text>
+          </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionButton}
@@ -226,8 +229,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.foreground,
+    borderWidth: 0.5,
+    borderColor: colors.gray[800],
     borderRadius: borderRadius.md,
     padding: spacing.base,
     marginBottom: spacing.md,
@@ -371,10 +374,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
   },
+  actionButtonDisabled: {
+    opacity: 0.5,
+  },
   actionText: {
     fontSize: typography.sizes.sm,
     color: colors.foreground,
     fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
+  },
+  actionTextDisabled: {
+    color: colors.gray[600],
   },
 });
