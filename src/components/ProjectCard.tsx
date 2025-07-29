@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Linking, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 import type { VercelProject } from '../types';
@@ -14,20 +14,45 @@ interface ProjectCardProps {
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags = [], onRedeploy }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [isLive, setIsLive] = useState<boolean | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  // Get project URL from multiple sources
+  const getProjectUrl = () => {
+    // Try production target first
+    if (project.targets?.production?.url) {
+      return project.targets.production.url;
+    }
+    // Try latest deployment
+    if (project.latestDeployments && project.latestDeployments.length > 0) {
+      return project.latestDeployments[0].url;
+    }
+    return null;
+  };
+
+  const projectUrl = getProjectUrl();
+
+  // Get favicon/logo URL from the project domain
+  const getProjectLogo = () => {
+    if (!projectUrl) return null;
+    // Use Google's favicon service or the actual favicon
+    return `https://www.google.com/s2/favicons?domain=${projectUrl}&sz=128`;
+  };
+
+  const logoUrl = getProjectLogo();
 
   useEffect(() => {
     // Check if site is live
     checkSiteStatus();
-  }, [project.link?.url]);
+  }, [projectUrl]);
 
   const checkSiteStatus = async () => {
-    if (!project.link?.url) {
+    if (!projectUrl) {
       setIsLive(null);
       return;
     }
 
     try {
-      const response = await fetch(`https://${project.link.url}`, {
+      const response = await fetch(`https://${projectUrl}`, {
         method: 'HEAD',
         timeout: 5000,
       } as any);
@@ -101,8 +126,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
 
   const handleOpenWebsite = (e: any) => {
     e.stopPropagation();
-    if (project.link?.url) {
-      Linking.openURL(`https://${project.link.url}`);
+    if (projectUrl) {
+      Linking.openURL(`https://${projectUrl}`);
     }
   };
 
@@ -128,9 +153,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
         {/* Top Row: Icon, Name, Live Status */}
         <View style={styles.topRow}>
           <View style={[styles.icon, { backgroundColor: getProjectColor() + '20', borderColor: getProjectColor() + '40' }]}>
-            <Text style={[styles.iconText, { color: getProjectColor() }]}>
-              {project.name.charAt(0).toUpperCase()}
-            </Text>
+            {logoUrl && !imageError ? (
+              <Image 
+                source={{ uri: logoUrl }}
+                style={styles.iconImage}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <Text style={[styles.iconText, { color: getProjectColor() }]}>
+                {project.name.charAt(0).toUpperCase()}
+              </Text>
+            )}
           </View>
           
           <View style={styles.nameSection}>
@@ -194,12 +227,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
         {/* Quick Actions */}
         <View style={styles.actions}>
           <TouchableOpacity 
-            style={[styles.actionButton, !project.link?.url && styles.actionButtonDisabled]}
+            style={[styles.actionButton, !projectUrl && styles.actionButtonDisabled]}
             onPress={handleOpenWebsite}
-            disabled={!project.link?.url}
+            disabled={!projectUrl}
           >
-            <Ionicons name="open-outline" size={16} color={project.link?.url ? colors.foreground : colors.gray[600]} />
-            <Text style={[styles.actionText, !project.link?.url && styles.actionTextDisabled]}>Open</Text>
+            <Ionicons name="open-outline" size={16} color={projectUrl ? colors.foreground : colors.gray[600]} />
+            <Text style={[styles.actionText, !projectUrl && styles.actionTextDisabled]}>Open</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -248,6 +281,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  iconImage: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.sm,
   },
   iconText: {
     fontSize: typography.sizes.xl,
