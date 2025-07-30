@@ -318,98 +318,86 @@ export const ProjectsScreen = ({ navigation }: any) => {
       />
 
       {/* Filter Chips */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterChipsContainer}
-        contentContainerStyle={styles.filterChipsContent}
-      >
-        {/* Time Filters */}
-        <TouchableOpacity
-          style={[styles.chip, selectedTimeFilter === 'today' && styles.chipActive]}
-          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'today' ? 'all' : 'today')}
-        >
-          <Ionicons 
-            name="today-outline" 
-            size={14} 
-            color={selectedTimeFilter === 'today' ? colors.background : colors.gray[400]} 
-          />
-          <Text style={[styles.chipText, selectedTimeFilter === 'today' && styles.chipTextActive]}>
-            Today
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.chip, selectedTimeFilter === 'week' && styles.chipActive]}
-          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'week' ? 'all' : 'week')}
-        >
-          <Ionicons 
-            name="calendar-outline" 
-            size={14} 
-            color={selectedTimeFilter === 'week' ? colors.background : colors.gray[400]} 
-          />
-          <Text style={[styles.chipText, selectedTimeFilter === 'week' && styles.chipTextActive]}>
-            This Week
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.chip, selectedTimeFilter === 'month' && styles.chipActive]}
-          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'month' ? 'all' : 'month')}
-        >
-          <Ionicons 
-            name="time-outline" 
-            size={14} 
-            color={selectedTimeFilter === 'month' ? colors.background : colors.gray[400]} 
-          />
-          <Text style={[styles.chipText, selectedTimeFilter === 'month' && styles.chipTextActive]}>
-            This Month
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.chip, selectedTimeFilter === 'older' && styles.chipActive]}
-          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'older' ? 'all' : 'older')}
-        >
-          <Ionicons 
-            name="archive-outline" 
-            size={14} 
-            color={selectedTimeFilter === 'older' ? colors.background : colors.gray[400]} 
-          />
-          <Text style={[styles.chipText, selectedTimeFilter === 'older' && styles.chipTextActive]}>
-            Older
-          </Text>
-        </TouchableOpacity>
-
-        {/* Tag Filters */}
-        {availableTags.map(tag => (
-          <TouchableOpacity
-            key={tag}
-            style={[styles.chip, selectedTags.includes(tag) && styles.chipActive]}
-            onPress={() => handleTagToggle(tag)}
+      {(availableTags.length > 0 || selectedTimeFilter !== 'all' || selectedTags.length > 0) && (
+        <View style={styles.filtersSection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterChipsContent}
           >
-            <Ionicons 
-              name="pricetag" 
-              size={14} 
-              color={selectedTags.includes(tag) ? colors.background : colors.gray[400]} 
-            />
-            <Text style={[styles.chipText, selectedTags.includes(tag) && styles.chipTextActive]}>
-              {tag}
-            </Text>
-          </TouchableOpacity>
-        ))}
+            {/* Time Filters */}
+            <TouchableOpacity
+              style={[styles.chip, selectedTimeFilter === 'today' && styles.chipActive]}
+              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'today' ? 'all' : 'today')}
+            >
+              <Text style={[styles.chipText, selectedTimeFilter === 'today' && styles.chipTextActive]}>
+                Today
+              </Text>
+            </TouchableOpacity>
 
-        {/* Clear All Button */}
-        {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
-          <TouchableOpacity
-            style={styles.clearAllChip}
-            onPress={clearAllFilters}
-          >
-            <Ionicons name="close-circle" size={14} color={colors.error} />
-            <Text style={styles.clearAllText}>Clear All</Text>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+            <TouchableOpacity
+              style={[styles.chip, selectedTimeFilter === 'week' && styles.chipActive]}
+              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'week' ? 'all' : 'week')}
+            >
+              <Text style={[styles.chipText, selectedTimeFilter === 'week' && styles.chipTextActive]}>
+                This Week
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.chip, selectedTimeFilter === 'month' && styles.chipActive]}
+              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'month' ? 'all' : 'month')}
+            >
+              <Text style={[styles.chipText, selectedTimeFilter === 'month' && styles.chipTextActive]}>
+                This Month
+              </Text>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            {availableTags.length > 0 && (
+              <View style={styles.chipDivider} />
+            )}
+
+            {/* Tag Filters */}
+            {availableTags.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.chip, styles.chipTag, selectedTags.includes(tag) && styles.chipTagActive]}
+                onPress={() => handleTagToggle(tag)}
+              >
+                <Text style={[styles.chipText, selectedTags.includes(tag) && styles.chipTextActive]}>
+                  {tag}
+                </Text>
+                {selectedTags.includes(tag) && (
+                  <Ionicons name="close" size={12} color={colors.background} />
+                )}
+              </TouchableOpacity>
+            ))}
+
+            {/* Clear All Button */}
+            {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
+              <>
+                <View style={styles.chipDivider} />
+                <TouchableOpacity
+                  style={styles.clearAllChip}
+                  onPress={clearAllFilters}
+                >
+                  <Text style={styles.clearAllText}>Clear</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Active Filters Summary */}
+      {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
+        <View style={styles.filterSummary}>
+          <Text style={styles.filterSummaryText}>
+            {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
+          </Text>
+        </View>
+      )}
       
       {filteredProjects.length === 0 && projects.length > 0 ? (
         <EmptyState
@@ -517,7 +505,9 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
   },
   listContent: {
-    padding: spacing.base,
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
   },
   modalOverlay: {
     flex: 1,
@@ -572,52 +562,82 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
     flex: 1,
   },
-  filterChipsContainer: {
-    paddingHorizontal: spacing.base,
-    marginBottom: spacing.sm,
+  filtersSection: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+    paddingVertical: spacing.sm,
   },
   filterChipsContent: {
-    gap: spacing.sm,
-    paddingRight: spacing.base,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.base,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.backgroundElevated,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.sm,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
+    minHeight: 28,
   },
   chipActive: {
     backgroundColor: colors.foreground,
     borderColor: colors.foreground,
   },
+  chipTag: {
+    borderColor: colors.gray[800],
+  },
+  chipTagActive: {
+    backgroundColor: colors.accent.blue,
+    borderColor: colors.accent.blue,
+  },
   chipText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.gray[400],
     fontWeight: typography.weights.medium,
-    letterSpacing: typography.letterSpacing.normal,
+    letterSpacing: 0.3,
   },
   chipTextActive: {
     color: colors.background,
   },
+  chipDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: colors.border.default,
+    marginHorizontal: spacing.xs,
+  },
   clearAllChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.status.error.bg,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.sm,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.error + '40',
+    borderColor: colors.border.default,
+    minHeight: 28,
   },
   clearAllText: {
-    fontSize: typography.sizes.sm,
-    color: colors.error,
+    fontSize: typography.sizes.xs,
+    color: colors.gray[400],
+    fontWeight: typography.weights.medium,
+    letterSpacing: 0.3,
+  },
+  filterSummary: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+  },
+  filterSummaryText: {
+    fontSize: typography.sizes.xs,
+    color: colors.gray[500],
     fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
   },
