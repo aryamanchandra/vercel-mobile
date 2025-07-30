@@ -38,6 +38,8 @@ const loadProjectTags = async () => {
   }
 };
 
+type TimeFilter = 'all' | 'today' | 'week' | 'month' | 'older';
+
 export const ProjectsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
   const [projects, setProjects] = useState<VercelProject[]>([]);
@@ -48,6 +50,11 @@ export const ProjectsScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [deployingProject, setDeployingProject] = useState<string | null>(null);
+  
+  // Filter states
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState<TimeFilter>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   const fetchProjects = async (isRefreshing = false) => {
     if (!api) return;
@@ -80,6 +87,14 @@ export const ProjectsScreen = ({ navigation }: any) => {
       
       setProjects(projectsWithDeployments);
       setFilteredProjects(projectsWithDeployments);
+      
+      // Extract unique tags from all projects
+      const allTags = new Set<string>();
+      projectsWithDeployments.forEach(project => {
+        const tags = PROJECT_TAGS[project.id] || [];
+        tags.forEach(tag => allTags.add(tag));
+      });
+      setAvailableTags(Array.from(allTags).sort());
     } catch (err: any) {
       setError(err.message || 'Failed to fetch projects');
     } finally {
@@ -93,22 +108,80 @@ export const ProjectsScreen = ({ navigation }: any) => {
     fetchProjects();
   }, [api]);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setFilteredProjects(projects);
-      return;
+  const applyFilters = (query: string = searchQuery, timeFilter: TimeFilter = selectedTimeFilter, tagFilters: string[] = selectedTags) => {
+    let filtered = projects;
+
+    // Text search filter
+    if (query.trim()) {
+      filtered = filtered.filter(project => {
+        const matchesName = project.name.toLowerCase().includes(query.toLowerCase());
+        const matchesFramework = project.framework?.toLowerCase().includes(query.toLowerCase());
+        const matchesTags = PROJECT_TAGS[project.id]?.some(tag => 
+          tag.toLowerCase().includes(query.toLowerCase())
+        );
+        return matchesName || matchesFramework || matchesTags;
+      });
     }
 
-    const filtered = projects.filter(project => {
-      const matchesName = project.name.toLowerCase().includes(query.toLowerCase());
-      const matchesFramework = project.framework?.toLowerCase().includes(query.toLowerCase());
-      const matchesTags = PROJECT_TAGS[project.id]?.some(tag => 
-        tag.toLowerCase().includes(query.toLowerCase())
-      );
-      return matchesName || matchesFramework || matchesTags;
-    });
+    // Time filter
+    if (timeFilter !== 'all') {
+      const now = Date.now();
+      filtered = filtered.filter(project => {
+        const lastDeployment = project.latestDeployments?.[0];
+        if (!lastDeployment?.created) return false;
+
+        const diff = now - lastDeployment.created;
+        const daysDiff = diff / 86400000;
+
+        switch (timeFilter) {
+          case 'today':
+            return daysDiff < 1;
+          case 'week':
+            return daysDiff < 7;
+          case 'month':
+            return daysDiff < 30;
+          case 'older':
+            return daysDiff >= 30;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Tag filters
+    if (tagFilters.length > 0) {
+      filtered = filtered.filter(project => {
+        const projectTags = PROJECT_TAGS[project.id] || [];
+        return tagFilters.every(tag => projectTags.includes(tag));
+      });
+    }
+
     setFilteredProjects(filtered);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    applyFilters(query, selectedTimeFilter, selectedTags);
+  };
+
+  const handleTimeFilterChange = (filter: TimeFilter) => {
+    setSelectedTimeFilter(filter);
+    applyFilters(searchQuery, filter, selectedTags);
+  };
+
+  const handleTagToggle = (tag: string) => {
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    setSelectedTags(newTags);
+    applyFilters(searchQuery, selectedTimeFilter, newTags);
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setSelectedTimeFilter('all');
+    setSelectedTags([]);
+    setFilteredProjects(projects);
   };
 
   const onRefresh = useCallback(() => {
@@ -243,6 +316,100 @@ export const ProjectsScreen = ({ navigation }: any) => {
         showAddButton={true}
         onAddPress={handleAddDeployment}
       />
+
+      {/* Filter Chips */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterChipsContainer}
+        contentContainerStyle={styles.filterChipsContent}
+      >
+        {/* Time Filters */}
+        <TouchableOpacity
+          style={[styles.chip, selectedTimeFilter === 'today' && styles.chipActive]}
+          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'today' ? 'all' : 'today')}
+        >
+          <Ionicons 
+            name="today-outline" 
+            size={14} 
+            color={selectedTimeFilter === 'today' ? colors.background : colors.gray[400]} 
+          />
+          <Text style={[styles.chipText, selectedTimeFilter === 'today' && styles.chipTextActive]}>
+            Today
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.chip, selectedTimeFilter === 'week' && styles.chipActive]}
+          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'week' ? 'all' : 'week')}
+        >
+          <Ionicons 
+            name="calendar-outline" 
+            size={14} 
+            color={selectedTimeFilter === 'week' ? colors.background : colors.gray[400]} 
+          />
+          <Text style={[styles.chipText, selectedTimeFilter === 'week' && styles.chipTextActive]}>
+            This Week
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.chip, selectedTimeFilter === 'month' && styles.chipActive]}
+          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'month' ? 'all' : 'month')}
+        >
+          <Ionicons 
+            name="time-outline" 
+            size={14} 
+            color={selectedTimeFilter === 'month' ? colors.background : colors.gray[400]} 
+          />
+          <Text style={[styles.chipText, selectedTimeFilter === 'month' && styles.chipTextActive]}>
+            This Month
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.chip, selectedTimeFilter === 'older' && styles.chipActive]}
+          onPress={() => handleTimeFilterChange(selectedTimeFilter === 'older' ? 'all' : 'older')}
+        >
+          <Ionicons 
+            name="archive-outline" 
+            size={14} 
+            color={selectedTimeFilter === 'older' ? colors.background : colors.gray[400]} 
+          />
+          <Text style={[styles.chipText, selectedTimeFilter === 'older' && styles.chipTextActive]}>
+            Older
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tag Filters */}
+        {availableTags.map(tag => (
+          <TouchableOpacity
+            key={tag}
+            style={[styles.chip, selectedTags.includes(tag) && styles.chipActive]}
+            onPress={() => handleTagToggle(tag)}
+          >
+            <Ionicons 
+              name="pricetag" 
+              size={14} 
+              color={selectedTags.includes(tag) ? colors.background : colors.gray[400]} 
+            />
+            <Text style={[styles.chipText, selectedTags.includes(tag) && styles.chipTextActive]}>
+              {tag}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* Clear All Button */}
+        {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
+          <TouchableOpacity
+            style={styles.clearAllChip}
+            onPress={clearAllFilters}
+          >
+            <Ionicons name="close-circle" size={14} color={colors.error} />
+            <Text style={styles.clearAllText}>Clear All</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
       
       {filteredProjects.length === 0 && projects.length > 0 ? (
         <EmptyState
@@ -404,5 +571,54 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     letterSpacing: typography.letterSpacing.normal,
     flex: 1,
+  },
+  filterChipsContainer: {
+    paddingHorizontal: spacing.base,
+    marginBottom: spacing.sm,
+  },
+  filterChipsContent: {
+    gap: spacing.sm,
+    paddingRight: spacing.base,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  chipActive: {
+    backgroundColor: colors.foreground,
+    borderColor: colors.foreground,
+  },
+  chipText: {
+    fontSize: typography.sizes.sm,
+    color: colors.gray[400],
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  chipTextActive: {
+    color: colors.background,
+  },
+  clearAllChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.status.error.bg,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
+  },
+  clearAllText: {
+    fontSize: typography.sizes.sm,
+    color: colors.error,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });
