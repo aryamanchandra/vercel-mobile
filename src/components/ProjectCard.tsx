@@ -46,16 +46,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
   }, [projectUrl]);
 
   const checkSiteStatus = async () => {
-    // Check deployment state from Vercel instead of HEAD request
-    // HEAD requests can fail due to CORS, timeout, etc. even if site is live
+    // Check if there's a production URL - if yes, it's live
+    // Vercel only assigns production URLs to successfully deployed, live sites
+    if (project.targets?.production?.url) {
+      setIsLive(true);
+      return;
+    }
+
+    // Otherwise check latest deployment state
     if (!project.latestDeployments || project.latestDeployments.length === 0) {
       setIsLive(null);
       return;
     }
 
-    const latestDeployment = project.latestDeployments[0];
-    // If deployment state is READY and has a URL, it's live
-    setIsLive(latestDeployment.state === 'READY' && !!projectUrl);
+    // Find production deployment
+    const productionDeployment = project.latestDeployments.find(d => d.target === 'production');
+    if (productionDeployment) {
+      setIsLive(productionDeployment.state === 'READY');
+      return;
+    }
+
+    // Fallback: check if any deployment is ready
+    const hasReadyDeployment = project.latestDeployments.some(d => d.state === 'READY');
+    setIsLive(hasReadyDeployment ? true : null);
   };
 
   const handlePressIn = () => {
@@ -177,42 +190,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
           </View>
         </View>
 
-        {/* Tags */}
-        {tags.length > 0 && (
-          <View style={styles.tagsRow}>
-            {tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Status Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoRow}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
-            <Text style={styles.infoText}>{getStatusText()}</Text>
-          </View>
-          
+        {/* Metadata Row */}
+        <View style={styles.metadataRow}>
           {lastDeployment && (
-            <View style={styles.infoRow}>
-              <Ionicons name="time-outline" size={12} color={colors.gray[600]} />
-              <Text style={styles.infoText}>
-                Deployed {formatTimeAgo(lastDeployment.created)}
-              </Text>
+            <Text style={styles.metadataText}>
+              Deployed {formatTimeAgo(lastDeployment.created)}
+            </Text>
+          )}
+          {tags.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {tags.slice(0, 2).map((tag, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
             </View>
           )}
         </View>
 
         {/* Last Commit */}
         {lastCommit && (
-          <View style={styles.commitRow}>
-            <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
-            <Text style={styles.commitText} numberOfLines={1}>
-              {lastCommit}
-            </Text>
-          </View>
+          <Text style={styles.commitText} numberOfLines={1}>
+            {lastCommit}
+          </Text>
         )}
 
         {/* Quick Actions */}
@@ -256,9 +256,9 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: colors.gray[800],
     borderRadius: borderRadius.md,
-    padding: spacing.base,
-    marginBottom: spacing.md,
-    gap: spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.lg,
   },
   topRow: {
     flexDirection: 'row',
@@ -317,80 +317,45 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     letterSpacing: typography.letterSpacing.wide,
   },
-  frameworkBadge: {
-    backgroundColor: colors.backgroundElevated,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: borderRadius.xs,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-    alignSelf: 'flex-start',
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
-  frameworkText: {
-    fontSize: typography.sizes.xs,
+  metadataText: {
+    fontSize: typography.sizes.sm,
     color: colors.gray[500],
-    fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
   },
-  tagsRow: {
+  tagsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
   },
   tag: {
-    backgroundColor: colors.accent.blue + '20',
-    borderWidth: 1,
-    borderColor: colors.accent.blue + '40',
+    backgroundColor: colors.gray[900],
+    borderWidth: 0.5,
+    borderColor: colors.gray[800],
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: borderRadius.xs,
   },
   tagText: {
     fontSize: typography.sizes.xs,
-    color: colors.accent.blue,
+    color: colors.gray[400],
     fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
   },
-  infoSection: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  infoText: {
-    fontSize: typography.sizes.sm,
-    color: colors.foregroundMuted,
-    letterSpacing: typography.letterSpacing.normal,
-  },
-  commitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.default,
-  },
   commitText: {
     fontSize: typography.sizes.sm,
-    color: colors.foregroundMuted,
+    color: colors.gray[600],
     letterSpacing: typography.letterSpacing.normal,
-    flex: 1,
+    fontStyle: 'italic',
   },
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.default,
   },
   actionButton: {
     flex: 1,
