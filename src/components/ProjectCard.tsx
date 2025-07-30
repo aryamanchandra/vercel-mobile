@@ -108,21 +108,28 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
   };
 
   const formatTimeAgo = (timestamp: number) => {
-    if (!timestamp || isNaN(timestamp)) return 'recently';
+    if (!timestamp || isNaN(timestamp)) {
+      console.log('Invalid timestamp:', timestamp);
+      return 'recently';
+    }
     
     const now = Date.now();
     const diff = now - timestamp;
+    
+    // Log for debugging
+    console.log('Timestamp:', timestamp, 'Now:', now, 'Diff:', diff);
+    
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
     if (diff < 0) return 'just now';
     if (minutes < 1) return 'now';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 30) return `${days}d`;
-    if (days < 365) return `${Math.floor(days / 30)}mo`;
-    return `${Math.floor(days / 365)}y`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 30) return `${days}d ago`;
+    if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+    return `${Math.floor(days / 365)}y ago`;
   };
 
   const getProjectColor = () => {

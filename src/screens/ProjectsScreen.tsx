@@ -21,11 +21,21 @@ import { GlobalSearch } from '../components/GlobalSearch';
 import { SkeletonList } from '../components/SkeletonLoader';
 import { VercelProject } from '../types';
 
-// Mock tags data - in real app, this would come from API or storage
-const PROJECT_TAGS: { [key: string]: string[] } = {
-  // Add your project IDs and tags here
-  // 'project-id-1': ['personal', 'production'],
-  // 'project-id-2': ['client', 'staging'],
+// Project tags - stored in AsyncStorage for persistence
+const PROJECT_TAGS: { [key: string]: string[] } = {};
+
+// Helper to load tags from AsyncStorage
+const loadProjectTags = async () => {
+  try {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const stored = await AsyncStorage.getItem('projectTags');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      Object.assign(PROJECT_TAGS, parsed);
+    }
+  } catch (error) {
+    console.error('Failed to load project tags:', error);
+  }
 };
 
 export const ProjectsScreen = ({ navigation }: any) => {
@@ -46,9 +56,30 @@ export const ProjectsScreen = ({ navigation }: any) => {
       if (!isRefreshing) setLoading(true);
       setError(null);
       
+      // Fetch projects
       const response = await api.getProjects(100);
-      setProjects(response.projects);
-      setFilteredProjects(response.projects);
+      const projectsList = response.projects;
+      
+      // Fetch latest deployments for each project to get accurate data
+      const projectsWithDeployments = await Promise.all(
+        projectsList.map(async (project) => {
+          try {
+            // Get latest 3 deployments for this project
+            const deployments = await api.getDeployments(3, undefined, project.id);
+            return {
+              ...project,
+              latestDeployments: deployments.deployments || []
+            };
+          } catch (error) {
+            // If fetching deployments fails, return project without them
+            console.error(`Failed to fetch deployments for ${project.name}:`, error);
+            return project;
+          }
+        })
+      );
+      
+      setProjects(projectsWithDeployments);
+      setFilteredProjects(projectsWithDeployments);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch projects');
     } finally {
@@ -58,6 +89,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
   };
 
   useEffect(() => {
+    loadProjectTags(); // Load saved tags
     fetchProjects();
   }, [api]);
 
