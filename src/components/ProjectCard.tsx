@@ -166,8 +166,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        {/* Top Row: Icon, Name, Live Status */}
+        {/* Top Row: Icon and Content */}
         <View style={styles.topRow}>
+          {/* Icon */}
           <View style={[styles.icon, { backgroundColor: getProjectColor() + '20', borderColor: getProjectColor() + '40' }]}>
             {logoUrl && !imageError ? (
               <Image 
@@ -182,37 +183,39 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
             )}
           </View>
           
-          <View style={styles.nameSection}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
-              {isLive !== null && (
-                <View style={[styles.liveBadge, { backgroundColor: isLive ? colors.successBg : colors.errorBg }]}>
-                  <View style={[styles.liveDot, { backgroundColor: isLive ? colors.success : colors.error }]} />
-                  <Text style={[styles.liveText, { color: isLive ? colors.success : colors.error }]}>
-                    {isLive ? 'LIVE' : 'DOWN'}
+          {/* Content Section: Name and Status */}
+          <View style={styles.contentSection}>
+            {/* Project Name */}
+            <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
+            
+            {/* Status Row: Live Badge, Deployment Time, and Tags */}
+            <View style={styles.statusRow}>
+              <View style={styles.statusLeft}>
+                {isLive !== null && (
+                  <View style={[styles.liveBadge, { backgroundColor: isLive ? colors.successBg : colors.errorBg }]}>
+                    <View style={[styles.liveDot, { backgroundColor: isLive ? colors.success : colors.error }]} />
+                    <Text style={[styles.liveText, { color: isLive ? colors.success : colors.error }]}>
+                      {isLive ? 'LIVE' : 'DOWN'}
+                    </Text>
+                  </View>
+                )}
+                {lastDeployment && (
+                  <Text style={styles.metadataText}>
+                    Deployed {formatTimeAgo(lastDeployment.created)}
                   </Text>
+                )}
+              </View>
+              {tags.length > 0 && (
+                <View style={styles.tagsContainer}>
+                  {tags.slice(0, 2).map((tag, index) => (
+                    <View key={index} style={styles.tag}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))}
                 </View>
               )}
             </View>
           </View>
-        </View>
-
-        {/* Metadata Row */}
-        <View style={styles.metadataRow}>
-          {lastDeployment && (
-            <Text style={styles.metadataText}>
-              Deployed {formatTimeAgo(lastDeployment.created)}
-            </Text>
-          )}
-          {tags.length > 0 && (
-            <View style={styles.tagsContainer}>
-              {tags.slice(0, 2).map((tag, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
 
         {/* Last Commit */}
@@ -229,7 +232,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
             onPress={handleOpenWebsite}
             disabled={!projectUrl}
           >
-            <Ionicons name="open-outline" size={16} color={projectUrl ? colors.foreground : colors.gray[600]} />
+            <Ionicons name="open-outline" size={18} color={projectUrl ? colors.foreground : colors.gray[600]} />
             <Text style={[styles.actionText, !projectUrl && styles.actionTextDisabled]}>Open</Text>
           </TouchableOpacity>
           
@@ -237,7 +240,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
             style={styles.actionButton}
             onPress={handleRedeploy}
           >
-            <Ionicons name="reload-outline" size={16} color={colors.foreground} />
+            <Ionicons name="reload-outline" size={18} color={colors.foreground} />
             <Text style={styles.actionText}>Redeploy</Text>
           </TouchableOpacity>
 
@@ -248,7 +251,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
               onPress();
             }}
           >
-            <Ionicons name="settings-outline" size={16} color={colors.foreground} />
+            <Ionicons name="settings-outline" size={18} color={colors.foreground} />
             <Text style={styles.actionText}>Settings</Text>
           </TouchableOpacity>
         </View>
@@ -263,8 +266,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.base,
-    marginBottom: spacing.base,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
     gap: spacing.md,
   },
   topRow: {
@@ -290,21 +293,28 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.semibold,
   },
-  nameSection: {
+  contentSection: {
     flex: 1,
-    gap: spacing.xs,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
-    flexWrap: 'wrap',
+    minWidth: 0, // Allow flex child to shrink below content size for ellipsis
   },
   name: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
     color: colors.foreground,
     letterSpacing: typography.letterSpacing.tight,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
   },
   liveBadge: {
     flexDirection: 'row',
@@ -324,21 +334,15 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     letterSpacing: 0.5,
   },
-  metadataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
   metadataText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.gray[500],
     letterSpacing: typography.letterSpacing.normal,
   },
   tagsContainer: {
     flexDirection: 'row',
     gap: spacing.xs,
+    flexShrink: 0,
   },
   tag: {
     backgroundColor: colors.gray[900],
@@ -362,7 +366,8 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   actionButton: {
     flex: 1,
@@ -370,18 +375,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingVertical: 8,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     backgroundColor: 'transparent',
     borderRadius: borderRadius.sm,
     borderWidth: 1,
     borderColor: colors.border.default,
-    minHeight: 32,
+    minHeight: 44, // iOS minimum touch target
   },
   actionButtonDisabled: {
     opacity: 0.4,
   },
   actionText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.sm,
     color: colors.foreground,
     fontWeight: typography.weights.medium,
     letterSpacing: 0.3,

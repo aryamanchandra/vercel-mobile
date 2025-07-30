@@ -318,17 +318,26 @@ export const ProjectsScreen = ({ navigation }: any) => {
       />
 
       {/* Filter Chips */}
-      {(availableTags.length > 0 || selectedTimeFilter !== 'all' || selectedTags.length > 0) && (
-        <View style={styles.filtersSection}>
+      <View style={styles.filtersSection}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterChipsContent}
           >
+            {/* All Filter - Default */}
+            <TouchableOpacity
+              style={[styles.chip, selectedTimeFilter === 'all' && styles.chipActive]}
+              onPress={() => handleTimeFilterChange('all')}
+            >
+              <Text style={[styles.chipText, selectedTimeFilter === 'all' && styles.chipTextActive]}>
+                All
+              </Text>
+            </TouchableOpacity>
+
             {/* Time Filters */}
             <TouchableOpacity
               style={[styles.chip, selectedTimeFilter === 'today' && styles.chipActive]}
-              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'today' ? 'all' : 'today')}
+              onPress={() => handleTimeFilterChange('today')}
             >
               <Text style={[styles.chipText, selectedTimeFilter === 'today' && styles.chipTextActive]}>
                 Today
@@ -337,7 +346,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
             <TouchableOpacity
               style={[styles.chip, selectedTimeFilter === 'week' && styles.chipActive]}
-              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'week' ? 'all' : 'week')}
+              onPress={() => handleTimeFilterChange('week')}
             >
               <Text style={[styles.chipText, selectedTimeFilter === 'week' && styles.chipTextActive]}>
                 This Week
@@ -346,7 +355,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
             <TouchableOpacity
               style={[styles.chip, selectedTimeFilter === 'month' && styles.chipActive]}
-              onPress={() => handleTimeFilterChange(selectedTimeFilter === 'month' ? 'all' : 'month')}
+              onPress={() => handleTimeFilterChange('month')}
             >
               <Text style={[styles.chipText, selectedTimeFilter === 'month' && styles.chipTextActive]}>
                 This Month
@@ -375,7 +384,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
             ))}
 
             {/* Clear All Button */}
-            {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
+            {(selectedTimeFilter !== 'all' || selectedTags.length > 0) && (
               <>
                 <View style={styles.chipDivider} />
                 <TouchableOpacity
@@ -388,7 +397,6 @@ export const ProjectsScreen = ({ navigation }: any) => {
             )}
           </ScrollView>
         </View>
-      )}
 
       {/* Active Filters Summary */}
       {(selectedTimeFilter !== 'all' || selectedTags.length > 0 || searchQuery) && (
@@ -487,7 +495,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     backgroundColor: colors.background,
@@ -505,9 +513,9 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
   },
   listContent: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl * 2,
   },
   modalOverlay: {
     flex: 1,
@@ -569,20 +577,20 @@ const styles = StyleSheet.create({
   },
   filterChipsContent: {
     gap: spacing.xs,
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
-    minHeight: 28,
+    minHeight: 36,
   },
   chipActive: {
     backgroundColor: colors.foreground,
@@ -596,7 +604,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent.blue,
   },
   chipText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.sm,
     color: colors.gray[400],
     fontWeight: typography.weights.medium,
     letterSpacing: 0.3,
@@ -615,22 +623,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
-    minHeight: 28,
+    minHeight: 36,
   },
   clearAllText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.sm,
     color: colors.gray[400],
     fontWeight: typography.weights.medium,
     letterSpacing: 0.3,
   },
   filterSummary: {
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.default,
