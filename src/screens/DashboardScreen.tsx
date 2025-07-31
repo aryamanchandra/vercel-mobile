@@ -263,10 +263,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xl * 2,
   },
   header: {
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
   },
@@ -284,20 +284,19 @@ const styles = StyleSheet.create({
   },
   kpiGrid: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.base,
+    padding: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   kpiValue: {
     fontSize: typography.sizes.display,
@@ -312,7 +311,7 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
   },
   section: {
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.xl,
   },
   sectionHeader: {
@@ -339,13 +338,12 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.base,
+    padding: spacing.lg,
     alignItems: 'center',
-    ...shadows.sm,
   },
   statusDot: {
     width: 8,
@@ -368,13 +366,12 @@ const styles = StyleSheet.create({
   projectRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   projectIcon: {
     width: 40,

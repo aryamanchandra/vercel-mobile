@@ -90,14 +90,14 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
           <View style={styles.metaSection}>
             {deployment.meta?.githubCommitSha && (
               <View style={styles.metaItem}>
-                <Ionicons name="git-commit-outline" size={11} color={colors.gray[600]} />
+                <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
                 <Text style={styles.metaText}>
                   {deployment.meta.githubCommitSha.slice(0, 7)}
                 </Text>
               </View>
             )}
             <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={11} color={colors.gray[600]} />
+              <Ionicons name="time-outline" size={12} color={colors.gray[600]} />
               <Text style={styles.metaText}>
                 {formatTimeAgo(deployment.created)}
               </Text>
@@ -110,7 +110,7 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
               onPress();
             }}
           >
-            <Ionicons name="open-outline" size={14} color={colors.gray[500]} />
+            <Ionicons name="open-outline" size={18} color={colors.gray[500]} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -120,14 +120,13 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.base,
-    marginBottom: spacing.md,
-    gap: spacing.sm + 2,
-    ...shadows.sm,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
   topRow: {
     flexDirection: 'row',
@@ -136,7 +135,8 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
+    minWidth: 0,
   },
   projectInfo: {
     flexDirection: 'row',
@@ -144,10 +144,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   projectName: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: typography.letterSpacing.normal,
+    letterSpacing: typography.letterSpacing.tight,
     flex: 1,
   },
   prodBadge: {
