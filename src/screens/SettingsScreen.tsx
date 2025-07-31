@@ -86,7 +86,8 @@ export const SettingsScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
       </View>
@@ -160,13 +161,17 @@ export const SettingsScreen = () => {
         />
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
   },
   centered: {
     flex: 1,

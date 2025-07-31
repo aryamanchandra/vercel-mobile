@@ -46,7 +46,7 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.nameSection}>
-            <Ionicons name="globe-outline" size={16} color={colors.foreground} />
+            <Ionicons name="globe-outline" size={18} color={colors.foreground} />
             <Text style={styles.name} numberOfLines={1}>{domain.name}</Text>
           </View>
           {domain.verified && (
@@ -74,7 +74,7 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
         {/* Actions */}
         <View style={styles.actions}>
           <TouchableOpacity style={styles.actionButton} onPress={handleOpenDomain}>
-            <Ionicons name="open-outline" size={14} color={colors.foregroundMuted} />
+            <Ionicons name="open-outline" size={16} color={colors.foregroundMuted} />
             <Text style={styles.actionText}>Open</Text>
           </TouchableOpacity>
           <View style={styles.divider} />
@@ -85,7 +85,7 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
               onManageDNS();
             }}
           >
-            <Ionicons name="settings-outline" size={14} color={colors.foregroundMuted} />
+            <Ionicons name="settings-outline" size={16} color={colors.foregroundMuted} />
             <Text style={styles.actionText}>DNS</Text>
           </TouchableOpacity>
         </View>
@@ -96,14 +96,13 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.base,
-    marginBottom: spacing.md,
-    gap: spacing.sm + 2,
-    ...shadows.sm,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -115,12 +114,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     flex: 1,
+    minWidth: 0,
   },
   name: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: typography.letterSpacing.normal,
+    letterSpacing: typography.letterSpacing.tight,
     flex: 1,
   },
   verifiedBadge: {
@@ -185,12 +185,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    minHeight: 40,
   },
   actionText: {
     fontSize: typography.sizes.sm,
     color: colors.foregroundMuted,
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.weights.semibold,
     letterSpacing: typography.letterSpacing.normal,
   },
   divider: {

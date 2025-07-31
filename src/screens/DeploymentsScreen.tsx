@@ -124,7 +124,7 @@ export const DeploymentsScreen = ({ navigation }: any) => {
   const targets = ['production', 'preview', 'development'];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Deployments</Text>
@@ -267,7 +267,7 @@ export const DeploymentsScreen = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 

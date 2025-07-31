@@ -6,8 +6,9 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
-import { colors, spacing } from '../theme/colors';
+import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { DomainCard } from '../components/DomainCard';
@@ -78,7 +79,7 @@ export const DomainsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Domains</Text>
@@ -107,99 +108,47 @@ export const DomainsScreen = ({ navigation }: any) => {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: colors.border.default,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: typography.sizes.xxxxl,
+    fontWeight: typography.weights.bold,
+    color: colors.foreground,
+    letterSpacing: typography.letterSpacing.tight,
   },
   count: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
+    marginTop: spacing.xs,
   },
   listContent: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: '#000',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  domainName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-  },
-  verifiedBadge: {
-    backgroundColor: '#0070f3',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  verifiedText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  badge: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  badgeText: {
-    fontSize: 11,
-    color: '#888',
-  },
-  dnsButton: {
-    backgroundColor: '#0070f3',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  dnsButtonText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl * 2,
   },
 });
 
