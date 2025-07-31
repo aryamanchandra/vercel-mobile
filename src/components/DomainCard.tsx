@@ -73,11 +73,13 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
 
         {/* Actions */}
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleOpenDomain}>
-            <Ionicons name="open-outline" size={16} color={colors.foregroundMuted} />
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleOpenDomain}
+          >
+            <Ionicons name="open-outline" size={16} color={colors.foreground} />
             <Text style={styles.actionText}>Open</Text>
           </TouchableOpacity>
-          <View style={styles.divider} />
           <TouchableOpacity 
             style={styles.actionButton} 
             onPress={(e) => {
@@ -85,8 +87,8 @@ export const DomainCard: React.FC<DomainCardProps> = ({ domain, onPress, onManag
               onManageDNS();
             }}
           >
-            <Ionicons name="settings-outline" size={16} color={colors.foregroundMuted} />
-            <Text style={styles.actionText}>DNS</Text>
+            <Ionicons name="settings-outline" size={16} color={colors.foreground} />
+            <Text style={styles.actionText}>Manage DNS</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -175,9 +177,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.default,
+    gap: spacing.sm,
   },
   actionButton: {
     flex: 1,
@@ -185,18 +185,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    minHeight: 40,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    minHeight: 44,
   },
   actionText: {
     fontSize: typography.sizes.sm,
-    color: colors.foregroundMuted,
+    color: colors.foreground,
     fontWeight: typography.weights.semibold,
     letterSpacing: typography.letterSpacing.normal,
-  },
-  divider: {
-    width: 1,
-    height: 16,
-    backgroundColor: colors.border.default,
   },
 });
