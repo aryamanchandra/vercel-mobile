@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius } from '../theme/colors';
+import { colors, spacing, borderRadius, typography } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { DeploymentCard } from '../components/DeploymentCard';
@@ -98,7 +99,8 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
       {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -308,17 +310,22 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
           </>
         )}
       </ScrollView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.default,
@@ -336,10 +343,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   projectName: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: -0.3,
+    letterSpacing: typography.letterSpacing.tight,
   },
   frameworkBadge: {
     backgroundColor: colors.gray[900],
@@ -350,20 +357,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
   },
   frameworkText: {
-    fontSize: 11,
+    fontSize: typography.sizes.xs,
     color: colors.gray[500],
-    fontWeight: '600',
-    letterSpacing: -0.1,
+    fontWeight: typography.weights.semibold,
+    letterSpacing: typography.letterSpacing.normal,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: borderRadius.full,
   },
   domain: {
-    fontSize: 13,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -379,35 +386,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: colors.border.default,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.xs,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     marginRight: spacing.md,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    minHeight: 44,
   },
   tabActive: {
     borderBottomColor: colors.foreground,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
     color: colors.gray[500],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   tabTextActive: {
     color: colors.foreground,
+    fontWeight: typography.weights.semibold,
   },
   content: {
     flex: 1,
   },
   contentInner: {
-    padding: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    paddingBottom: spacing.xl * 2,
   },
   loading: {
     flex: 1,
@@ -420,31 +431,31 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   statCard: {
     flex: 1,
-    backgroundColor: colors.gray[950],
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    padding: spacing.lg,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: typography.sizes.xxxl,
+    fontWeight: typography.weights.bold,
     color: colors.foreground,
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: spacing.xs,
   },
   statLabel: {
-    fontSize: 11,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   section: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -452,26 +463,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
     color: colors.foreground,
-    letterSpacing: -0.3,
+    letterSpacing: typography.letterSpacing.tight,
   },
   viewAll: {
-    fontSize: 13,
+    fontSize: typography.sizes.base,
     color: colors.accent.blue,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   domainCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.gray[950],
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    padding: spacing.lg,
+    minHeight: 44,
   },
   domainInfo: {
     flexDirection: 'row',
@@ -480,18 +492,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   domainText: {
-    fontSize: 13,
+    fontSize: typography.sizes.base,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
     fontFamily: 'monospace',
   },
   infoCard: {
-    backgroundColor: colors.gray[950],
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   infoRow: {
     flexDirection: 'row',
@@ -499,18 +511,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoLabel: {
-    fontSize: 13,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: typography.sizes.base,
     color: colors.foreground,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   emptyCard: {
-    backgroundColor: colors.gray[950],
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
@@ -518,43 +530,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 13,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.gray[950],
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    padding: spacing.lg,
+    minHeight: 44,
   },
   activityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: borderRadius.full,
   },
   activityInfo: {
     flex: 1,
-    gap: 2,
+    gap: spacing.xs,
   },
   activityTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
   activityMeta: {
-    fontSize: 12,
-    color: colors.gray[500],
-    letterSpacing: -0.2,
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   activityTime: {
-    fontSize: 11,
+    fontSize: typography.sizes.xs,
     color: colors.gray[600],
-    letterSpacing: -0.2,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });

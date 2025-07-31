@@ -7,7 +7,10 @@ import {
   Alert,
   Linking,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { VercelDeployment } from '../types';
@@ -140,15 +143,15 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
   };
 
   const getStateColor = (state: string) => {
-    const colors: { [key: string]: string } = {
-      READY: '#0070f3',
-      BUILDING: '#f5a623',
-      ERROR: '#ff0000',
-      QUEUED: '#888',
-      INITIALIZING: '#888',
-      CANCELED: '#666',
+    const stateColors: { [key: string]: string } = {
+      READY: colors.success,
+      BUILDING: colors.warning,
+      ERROR: colors.error,
+      QUEUED: colors.gray[600],
+      INITIALIZING: colors.gray[600],
+      CANCELED: colors.gray[700],
     };
-    return colors[state] || '#888';
+    return stateColors[state] || colors.gray[600];
   };
 
   const formatDate = (timestamp: number) => {
@@ -156,14 +159,15 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: getStateColor(deployment.state) }]} />
-          <Text style={styles.status}>{deployment.state}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, { backgroundColor: getStateColor(deployment.state) }]} />
+            <Text style={styles.status}>{deployment.state}</Text>
+          </View>
+          <Text style={styles.url}>{deployment.url}</Text>
         </View>
-        <Text style={styles.url}>{deployment.url}</Text>
-      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Details</Text>
@@ -231,7 +235,7 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
         />
 
         <Button
-          title="📝 View Runtime Logs"
+          title="View Runtime Logs"
           onPress={() => navigation.navigate('RuntimeLogs', {
             projectId: deployment.name,
             deploymentId: deployment.uid,
@@ -243,7 +247,7 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
 
         {deployment.state === 'READY' && deployment.target !== 'production' && (
           <Button
-            title="🚀 Promote to Production"
+            title="Promote to Production"
             onPress={handlePromote}
             variant="primary"
             loading={promoting}
@@ -252,7 +256,7 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
         )}
 
         <Button
-          title="🔄 Redeploy"
+          title="Redeploy"
           onPress={handleRedeploy}
           variant="secondary"
           loading={redeploying}
@@ -281,84 +285,106 @@ export const DeploymentDetailScreen = ({ route, navigation }: any) => {
           style={styles.linkButton}
           onPress={() => Linking.openURL(`https://vercel.com/${deployment.name}/${deployment.uid}`)}
         >
-          <Text style={styles.linkText}>View on Vercel →</Text>
+          <Text style={styles.linkText}>View on Vercel</Text>
+          <Ionicons name="arrow-forward" size={16} color={colors.accent.blue} />
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#000',
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl * 2,
   },
   header: {
-    padding: 16,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: colors.border.default,
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   statusDot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    borderRadius: borderRadius.full,
+    marginRight: spacing.sm,
   },
   status: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
+    color: colors.foreground,
+    letterSpacing: typography.letterSpacing.tight,
   },
   url: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
+    letterSpacing: typography.letterSpacing.normal,
   },
   section: {
-    padding: 16,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: colors.border.default,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 16,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
+    color: colors.foreground,
+    marginBottom: spacing.md,
+    letterSpacing: typography.letterSpacing.tight,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: typography.sizes.base,
+    color: colors.foregroundMuted,
     width: 120,
+    letterSpacing: typography.letterSpacing.normal,
   },
   detailValue: {
-    fontSize: 14,
-    color: '#fff',
+    fontSize: typography.sizes.base,
+    color: colors.foreground,
     flex: 1,
     textAlign: 'right',
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
   actions: {
-    padding: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
   },
   actionButton: {
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   linkButton: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
   },
   linkText: {
-    fontSize: 14,
-    color: '#0070f3',
+    fontSize: typography.sizes.base,
+    color: colors.accent.blue,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.normal,
   },
 });
 
