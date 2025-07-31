@@ -10,7 +10,9 @@ import {
   Modal,
   ScrollView,
   SafeAreaView,
+  TextInput,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { DeploymentCard } from '../components/DeploymentCard';
@@ -28,6 +30,7 @@ export const DeploymentsScreen = ({ navigation }: any) => {
   const [error, setError] = useState<string | null>(null);
   
   // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState<string | null>(null);
@@ -62,10 +65,21 @@ export const DeploymentsScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     applyFilters();
-  }, [selectedProject, selectedState, selectedTarget, deployments]);
+  }, [selectedProject, selectedState, selectedTarget, deployments, searchQuery]);
 
   const applyFilters = () => {
     let filtered = [...deployments];
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(d => 
+        d.name?.toLowerCase().includes(query) ||
+        d.meta?.githubCommitMessage?.toLowerCase().includes(query) ||
+        d.meta?.githubCommitSha?.toLowerCase().includes(query) ||
+        d.url?.toLowerCase().includes(query)
+      );
+    }
 
     if (selectedProject) {
       filtered = filtered.filter(d => d.name === selectedProject);
@@ -83,6 +97,7 @@ export const DeploymentsScreen = ({ navigation }: any) => {
   };
 
   const clearFilters = () => {
+    setSearchQuery('');
     setSelectedProject(null);
     setSelectedState(null);
     setSelectedTarget(null);
@@ -125,19 +140,112 @@ export const DeploymentsScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Deployments</Text>
-          <Text style={styles.count}>{filteredDeployments.length} of {deployments.length}</Text>
+        <Text style={styles.title}>Deployments</Text>
+        <Text style={styles.count}>{filteredDeployments.length} of {deployments.length}</Text>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color={colors.foregroundMuted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search deployments..."
+            placeholderTextColor={colors.foregroundMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color={colors.foregroundMuted} />
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={styles.advancedFilterButton}
           onPress={() => setFilterModalVisible(true)}
         >
-          <Text style={styles.filterButtonText}>
-            🔍 Filter{activeFiltersCount > 0 && ` (${activeFiltersCount})`}
-          </Text>
+          <Ionicons name="options-outline" size={18} color={colors.foreground} />
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
+      </View>
+
+      {/* Filter Chips */}
+      <View style={styles.filtersSection}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterChipsContent}
+        >
+          {/* State Filters */}
+          <TouchableOpacity
+            style={[styles.chip, selectedState === 'READY' && styles.chipActive]}
+            onPress={() => setSelectedState(selectedState === 'READY' ? null : 'READY')}
+          >
+            <Text style={[styles.chipText, selectedState === 'READY' && styles.chipTextActive]}>
+              Ready
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.chip, selectedState === 'BUILDING' && styles.chipActive]}
+            onPress={() => setSelectedState(selectedState === 'BUILDING' ? null : 'BUILDING')}
+          >
+            <Text style={[styles.chipText, selectedState === 'BUILDING' && styles.chipTextActive]}>
+              Building
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.chip, selectedState === 'ERROR' && styles.chipActive]}
+            onPress={() => setSelectedState(selectedState === 'ERROR' ? null : 'ERROR')}
+          >
+            <Text style={[styles.chipText, selectedState === 'ERROR' && styles.chipTextActive]}>
+              Error
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.chipDivider} />
+
+          {/* Target Filters */}
+          <TouchableOpacity
+            style={[styles.chip, selectedTarget === 'production' && styles.chipActive]}
+            onPress={() => setSelectedTarget(selectedTarget === 'production' ? null : 'production')}
+          >
+            <Text style={[styles.chipText, selectedTarget === 'production' && styles.chipTextActive]}>
+              Production
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.chip, selectedTarget === 'preview' && styles.chipActive]}
+            onPress={() => setSelectedTarget(selectedTarget === 'preview' ? null : 'preview')}
+          >
+            <Text style={[styles.chipText, selectedTarget === 'preview' && styles.chipTextActive]}>
+              Preview
+            </Text>
+          </TouchableOpacity>
+
+          {/* Clear Button */}
+          {(selectedState || selectedTarget || searchQuery) && (
+            <>
+              <View style={styles.chipDivider} />
+              <TouchableOpacity
+                style={styles.clearAllChip}
+                onPress={clearFilters}
+              >
+                <Text style={styles.clearAllText}>Clear</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </ScrollView>
       </View>
       
       {filteredDeployments.length === 0 && deployments.length > 0 ? (
@@ -283,14 +391,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.default,
   },
   title: {
     fontSize: typography.sizes.xxxxl,
@@ -304,26 +407,113 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
     marginTop: spacing.xs,
   },
-  listContent: {
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingVertical: spacing.sm,
   },
-  filterButton: {
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    gap: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: typography.sizes.base,
+    color: colors.foreground,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  advancedFilterButton: {
+    width: 48,
+    height: 48,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: colors.accent.blue,
+    borderRadius: borderRadius.full,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.foreground,
+  },
+  filtersSection: {
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+  },
+  filterChipsContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  chip: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border.default,
+    backgroundColor: 'transparent',
     minHeight: 36,
     justifyContent: 'center',
   },
-  filterButtonText: {
+  chipActive: {
+    backgroundColor: colors.accent.blue,
+    borderColor: colors.accent.blue,
+  },
+  chipText: {
     fontSize: typography.sizes.sm,
-    color: colors.foreground,
+    color: colors.foregroundMuted,
     fontWeight: typography.weights.semibold,
     letterSpacing: typography.letterSpacing.normal,
+  },
+  chipTextActive: {
+    color: colors.foreground,
+  },
+  chipDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border.default,
+    alignSelf: 'center',
+  },
+  clearAllChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundElevated,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  clearAllText: {
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
+    fontWeight: typography.weights.semibold,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl * 2,
   },
   modalOverlay: {
     flex: 1,
