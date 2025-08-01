@@ -18,6 +18,7 @@ import { DeploymentDetailScreen } from '../screens/DeploymentDetailScreen';
 import { EnvVariablesScreen } from '../screens/EnvVariablesScreen';
 import { DNSRecordsScreen } from '../screens/DNSRecordsScreen';
 import { RuntimeLogsScreen } from '../screens/RuntimeLogsScreen';
+  import { ProjectSettingsScreen } from '../screens/ProjectSettingsScreen';
 import { LoadingScreen } from '../components/LoadingScreen';
 
 const Stack = createNativeStackNavigator();
@@ -170,6 +171,11 @@ export const AppNavigator = () => {
               name="RuntimeLogs"
               component={RuntimeLogsScreen}
               options={{ title: 'Runtime Logs' }}
+            />
+            <Stack.Screen
+              name="ProjectSettings"
+              component={ProjectSettingsScreen}
+              options={{ title: 'Project Settings' }}
             />
           </>
         )}

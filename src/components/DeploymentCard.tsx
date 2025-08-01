@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, borderRadius, spacing, typography, shadows } from '../theme/colors';
 import { StatusBadge } from './StatusBadge';
@@ -9,9 +9,11 @@ interface DeploymentCardProps {
   deployment: VercelDeployment;
   onPress: () => void;
   hideProjectName?: boolean;
+  onRedeploy?: () => void | Promise<void>;
+  redeploying?: boolean;
 }
 
-export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress, hideProjectName = false }) => {
+export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress, hideProjectName = false, onRedeploy, redeploying = false }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -84,16 +86,38 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
           />
         </View>
 
-        {/* Bottom Row: Git SHA and Time */}
+        {/* Bottom Row: Git SHA and Time + Redeploy */}
         <View style={styles.bottomRow}>
-          {deployment.meta?.githubCommitSha && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            {deployment.meta?.githubCommitSha && (
+              <Text style={styles.metaText}>
+                {deployment.meta.githubCommitSha.slice(0, 7)}
+              </Text>
+            )}
             <Text style={styles.metaText}>
-              {deployment.meta.githubCommitSha.slice(0, 7)}
+              {formatTimeAgo(deployment.created)}
             </Text>
+          </View>
+          {onRedeploy && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={redeploying}
+              onPress={(e) => {
+                e.stopPropagation();
+                onRedeploy();
+              }}
+              style={[styles.redeployButton, redeploying && { opacity: 0.7 }]}
+            >
+              {redeploying ? (
+                <ActivityIndicator size="small" color={colors.foreground} />
+              ) : (
+                <>
+                  <Ionicons name="refresh" size={14} color={colors.foreground} />
+                  <Text style={styles.redeployText}>Redeploy</Text>
+                </>
+              )}
+            </TouchableOpacity>
           )}
-          <Text style={styles.metaText}>
-            {formatTimeAgo(deployment.created)}
-          </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -140,5 +164,22 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.foregroundMuted,
     letterSpacing: typography.letterSpacing.normal,
+  },
+  redeployButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    minHeight: 32,
+  },
+  redeployText: {
+    fontSize: typography.sizes.sm,
+    color: colors.foreground,
+    fontWeight: typography.weights.semibold,
   },
 });

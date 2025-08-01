@@ -110,9 +110,13 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
           <Text style={styles.domain}>{project.link.url}</Text>
         )}
 
+          <Text style={styles.infoText}>
+            Created {formatDate(project.createdAt)} · Updated {formatDate(project.updatedAt)}
+          </Text>
+
         <View style={styles.actionButtons}>
           <Button
-            title="Deploy"
+            title="Redeploy"
             onPress={handleDeploy}
             variant="primary"
             style={styles.actionButton}
@@ -188,6 +192,14 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                         deployment={deployment}
                         onPress={() => navigation.navigate('DeploymentDetail', { deployment })}
                         hideProjectName={true}
+                        onRedeploy={async () => {
+                          try {
+                            if (!api) return;
+                            await api.redeployDeployment(deployment.uid, deployment.name, deployment.target || undefined);
+                          } catch (e) {
+                            // no-op; errors will be surfaced by UI later if needed
+                          }
+                        }}
                       />
                     ))
                   )}
@@ -209,14 +221,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                     </TouchableOpacity>
                   </View>
                 )}
-
-                {/* Project Info */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Project Info</Text>
-                  <Text style={styles.infoText}>
-                    Created {formatDate(project.createdAt)} · Updated {formatDate(project.updatedAt)}
-                  </Text>
-                </View>
               </View>
             )}
 
@@ -277,8 +281,8 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.default,
+    borderBottomWidth: 0,
+    paddingBottom: spacing.xl,
     gap: spacing.md,
   },
   headerTop: {
@@ -306,9 +310,15 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+    alignItems: 'stretch',
+    width: '100%',
   },
   actionButton: {
     flex: 1,
+    minHeight: 44,
+    width: '100%',
   },
   headerButton: {
     padding: spacing.sm,
@@ -318,6 +328,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border.default,
     paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
   },
   tab: {
     flexDirection: 'row',
