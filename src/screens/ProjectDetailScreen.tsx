@@ -16,7 +16,7 @@ import { Button } from '../components/Button';
 import { DeploymentCard } from '../components/DeploymentCard';
 import { VercelProject, VercelDeployment, VercelDomain } from '../types';
 
-type TabId = 'overview' | 'envvars' | 'activity';
+type TabId = 'overview' | 'activity';
 
 export const ProjectDetailScreen = ({ route, navigation }: any) => {
   const { project } = route.params as { project: VercelProject };
@@ -28,7 +28,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     navigation.setOptions({
-      title: project.name,
       headerRight: () => (
         <TouchableOpacity
           onPress={handleOpenProject}
@@ -77,7 +76,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
 
   const tabs = [
     { id: 'overview' as TabId, label: 'Overview', icon: 'grid-outline' },
-    { id: 'envvars' as TabId, label: 'Env Vars', icon: 'key-outline' },
     { id: 'activity' as TabId, label: 'Activity', icon: 'time-outline' },
   ];
 
@@ -104,14 +102,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
       {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.projectInfo}>
-            <Text style={styles.projectName}>{project.name}</Text>
-            {project.framework && (
-              <View style={styles.frameworkBadge}>
-                <Text style={styles.frameworkText}>{project.framework}</Text>
-              </View>
-            )}
-          </View>
+          <Text style={styles.projectName}>{project.name}</Text>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
         </View>
 
@@ -188,12 +179,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
 
                 {/* Recent Deployments */}
                 <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Recent Deployments</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('DeploymentsTab')}>
-                      <Text style={styles.viewAll}>View All →</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text style={styles.sectionTitle}>Recent Deployments</Text>
 
                   {deployments.length === 0 ? (
                     <View style={styles.emptyCard}>
@@ -205,6 +191,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                         key={deployment.uid}
                         deployment={deployment}
                         onPress={() => navigation.navigate('DeploymentDetail', { deployment })}
+                        hideProjectName={true}
                       />
                     ))
                   )}
@@ -246,26 +233,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                       </View>
                     )}
                   </View>
-                </View>
-              </View>
-            )}
-
-            {activeTab === 'envvars' && (
-              <View style={styles.tabContent}>
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Environment Variables</Text>
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('EnvVariables', { project })}
-                    >
-                      <Ionicons name="add-circle-outline" size={24} color={colors.accent.blue} />
-                    </TouchableOpacity>
-                  </View>
-                  <Button
-                    title="Manage Environment Variables"
-                    onPress={() => navigation.navigate('EnvVariables', { project })}
-                    variant="secondary"
-                  />
                 </View>
               </View>
             )}
@@ -334,33 +301,14 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  projectInfo: {
-    flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
   },
   projectName: {
     fontSize: typography.sizes.xxl,
     fontWeight: typography.weights.semibold,
     color: colors.foreground,
     letterSpacing: typography.letterSpacing.tight,
-  },
-  frameworkBadge: {
-    backgroundColor: colors.gray[900],
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-  },
-  frameworkText: {
-    fontSize: typography.sizes.xs,
-    color: colors.gray[500],
-    fontWeight: typography.weights.semibold,
-    letterSpacing: typography.letterSpacing.normal,
+    flex: 1,
   },
   statusDot: {
     width: 10,
@@ -457,22 +405,11 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.md,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   sectionTitle: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.semibold,
     color: colors.foreground,
     letterSpacing: typography.letterSpacing.tight,
-  },
-  viewAll: {
-    fontSize: typography.sizes.base,
-    color: colors.accent.blue,
-    fontWeight: typography.weights.medium,
-    letterSpacing: typography.letterSpacing.normal,
   },
   domainCard: {
     flexDirection: 'row',

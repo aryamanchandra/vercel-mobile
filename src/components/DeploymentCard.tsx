@@ -8,9 +8,10 @@ import type { VercelDeployment } from '../types';
 interface DeploymentCardProps {
   deployment: VercelDeployment;
   onPress: () => void;
+  hideProjectName?: boolean;
 }
 
-export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress }) => {
+export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPress, hideProjectName = false }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -62,16 +63,23 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
         {/* Top Row */}
         <View style={styles.topRow}>
           <View style={styles.leftSection}>
-            <View style={styles.projectInfo}>
-              <Text style={styles.projectName} numberOfLines={1}>
-                {deployment.name}
-              </Text>
-              {deployment.target === 'production' && (
-                <View style={styles.prodBadge}>
-                  <Text style={styles.prodText}>PROD</Text>
-                </View>
-              )}
-            </View>
+            {!hideProjectName && (
+              <View style={styles.projectInfo}>
+                <Text style={styles.projectName} numberOfLines={1}>
+                  {deployment.name}
+                </Text>
+                {deployment.target === 'production' && (
+                  <View style={styles.prodBadge}>
+                    <Text style={styles.prodText}>PROD</Text>
+                  </View>
+                )}
+              </View>
+            )}
+            {hideProjectName && deployment.target === 'production' && (
+              <View style={styles.prodBadge}>
+                <Text style={styles.prodText}>PROD</Text>
+              </View>
+            )}
             {deployment.meta?.githubCommitMessage && (
               <Text style={styles.commitMsg} numberOfLines={1}>
                 {deployment.meta.githubCommitMessage}
