@@ -213,16 +213,9 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                 {/* Project Info */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Project Info</Text>
-                  <View style={styles.infoCard}>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Created</Text>
-                      <Text style={styles.infoValue}>{formatDate(project.createdAt)}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Last Updated</Text>
-                      <Text style={styles.infoValue}>{formatDate(project.updatedAt)}</Text>
-                    </View>
-                  </View>
+                  <Text style={styles.infoText}>
+                    Created {formatDate(project.createdAt)} · Updated {formatDate(project.updatedAt)}
+                  </Text>
                 </View>
               </View>
             )}
@@ -424,28 +417,9 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.normal,
     fontFamily: 'monospace',
   },
-  infoCard: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.border.default,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoLabel: {
+  infoText: {
     fontSize: typography.sizes.base,
     color: colors.foregroundMuted,
-    letterSpacing: typography.letterSpacing.normal,
-  },
-  infoValue: {
-    fontSize: typography.sizes.base,
-    color: colors.foreground,
-    fontWeight: typography.weights.medium,
     letterSpacing: typography.letterSpacing.normal,
   },
   emptyCard: {
