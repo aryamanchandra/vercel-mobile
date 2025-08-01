@@ -226,12 +226,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                       <Text style={styles.infoLabel}>Last Updated</Text>
                       <Text style={styles.infoValue}>{formatDate(project.updatedAt)}</Text>
                     </View>
-                    {project.framework && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Framework</Text>
-                        <Text style={styles.infoValue}>{project.framework}</Text>
-                      </View>
-                    )}
                   </View>
                 </View>
               </View>

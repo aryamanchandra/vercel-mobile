@@ -60,32 +60,23 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        {/* Top Row */}
+        {/* Top Row: Commit Message and Status */}
         <View style={styles.topRow}>
-          <View style={styles.leftSection}>
-            {!hideProjectName && (
-              <View style={styles.projectInfo}>
-                <Text style={styles.projectName} numberOfLines={1}>
-                  {deployment.name}
-                </Text>
-                {deployment.target === 'production' && (
-                  <View style={styles.prodBadge}>
-                    <Text style={styles.prodText}>PROD</Text>
-                  </View>
-                )}
-              </View>
-            )}
-            {hideProjectName && deployment.target === 'production' && (
-              <View style={styles.prodBadge}>
-                <Text style={styles.prodText}>PROD</Text>
-              </View>
-            )}
-            {deployment.meta?.githubCommitMessage && (
-              <Text style={styles.commitMsg} numberOfLines={1}>
-                {deployment.meta.githubCommitMessage}
-              </Text>
-            )}
-          </View>
+          {!hideProjectName && (
+            <Text style={styles.projectName} numberOfLines={1}>
+              {deployment.name}
+            </Text>
+          )}
+          {hideProjectName && deployment.meta?.githubCommitMessage && (
+            <Text style={styles.commitMsg} numberOfLines={1}>
+              {deployment.meta.githubCommitMessage}
+            </Text>
+          )}
+          {!hideProjectName && deployment.meta?.githubCommitMessage && (
+            <Text style={styles.commitMsg} numberOfLines={1}>
+              {deployment.meta.githubCommitMessage}
+            </Text>
+          )}
           <StatusBadge 
             status={deployment.state as any} 
             size="sm" 
@@ -93,33 +84,16 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({ deployment, onPr
           />
         </View>
 
-        {/* Bottom Row */}
+        {/* Bottom Row: Git SHA and Time */}
         <View style={styles.bottomRow}>
-          <View style={styles.metaSection}>
-            {deployment.meta?.githubCommitSha && (
-              <View style={styles.metaItem}>
-                <Ionicons name="git-commit-outline" size={12} color={colors.gray[600]} />
-                <Text style={styles.metaText}>
-                  {deployment.meta.githubCommitSha.slice(0, 7)}
-                </Text>
-              </View>
-            )}
-            <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={12} color={colors.gray[600]} />
-              <Text style={styles.metaText}>
-                {formatTimeAgo(deployment.created)}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity 
-            style={styles.viewButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              onPress();
-            }}
-          >
-            <Ionicons name="open-outline" size={18} color={colors.gray[500]} />
-          </TouchableOpacity>
+          {deployment.meta?.githubCommitSha && (
+            <Text style={styles.metaText}>
+              {deployment.meta.githubCommitSha.slice(0, 7)}
+            </Text>
+          )}
+          <Text style={styles.metaText}>
+            {formatTimeAgo(deployment.created)}
+          </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -138,18 +112,9 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm + 2,
-  },
-  leftSection: {
-    flex: 1,
-    gap: spacing.sm,
-    minWidth: 0,
-  },
-  projectInfo: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.md,
   },
   projectName: {
     fontSize: typography.sizes.base,
@@ -158,47 +123,23 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.tight,
     flex: 1,
   },
-  prodBadge: {
-    backgroundColor: colors.accent.blue,
-    paddingHorizontal: spacing.sm - 1,
-    paddingVertical: 2,
-    borderRadius: borderRadius.xs,
-  },
-  prodText: {
-    fontSize: typography.sizes.xs - 1,
-    fontWeight: typography.weights.bold,
-    color: colors.foreground,
-    letterSpacing: typography.letterSpacing.wide,
-  },
   commitMsg: {
-    fontSize: typography.sizes.sm,
-    color: colors.foregroundMuted,
+    fontSize: typography.sizes.base,
+    color: colors.foreground,
     letterSpacing: typography.letterSpacing.normal,
+    flex: 1,
   },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
   },
-  metaSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
   metaText: {
-    fontSize: typography.sizes.xs,
-    color: colors.gray[600],
+    fontSize: typography.sizes.sm,
+    color: colors.foregroundMuted,
     letterSpacing: typography.letterSpacing.normal,
-  },
-  viewButton: {
-    padding: spacing.xs,
   },
 });
