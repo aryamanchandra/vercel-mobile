@@ -107,7 +107,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
-    marginBottom: spacing.lg,
     gap: spacing.md,
   },
   topRow: {

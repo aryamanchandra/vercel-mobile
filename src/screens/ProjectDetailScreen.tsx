@@ -171,10 +171,6 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                     <Text style={styles.statValue}>{domains.length}</Text>
                     <Text style={styles.statLabel}>Domains</Text>
                   </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statValue}>{project.framework || 'N/A'}</Text>
-                    <Text style={styles.statLabel}>Framework</Text>
-                  </View>
                 </View>
 
                 {/* Recent Deployments */}
