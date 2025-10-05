@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Linking,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../theme/colors';
@@ -70,8 +71,7 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleDeploy = () => {
-    // Would trigger a new deployment
-    console.log('Trigger deploy for:', project.name);
+    // TODO: trigger new deployment (redeploy modal)
   };
 
   const tabs = [
@@ -195,9 +195,24 @@ export const ProjectDetailScreen = ({ route, navigation }: any) => {
                         onRedeploy={async () => {
                           try {
                             if (!api) return;
-                            await api.redeployDeployment(deployment.uid, deployment.name, deployment.target || undefined);
+                            console.debug('[UI] Redeploy tapped', {
+                              uid: deployment.uid,
+                              target: deployment.target,
+                              projectId: project.id,
+                              projectName: project.name,
+                            });
+                            const target = (deployment.target === 'production' ? 'production' : 'preview') as any;
+                            const name = deployment.name || project.name;
+                            await api.redeployDeployment(
+                              deployment.uid,
+                              project.id || project.name,
+                              target,
+                              name
+                            );
+                            Alert.alert('Redeploy queued', 'The deployment has been queued.');
                           } catch (e) {
-                            // no-op; errors will be surfaced by UI later if needed
+                            console.error('[UI] Redeploy failed', e);
+                            Alert.alert('Redeploy failed', `${(e as any)?.message || 'Vercel API returned an error.'}`);
                           }
                         }}
                       />
@@ -360,7 +375,7 @@ const styles = StyleSheet.create({
   contentInner: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: spacing.xl * 4,
   },
   loading: {
     flex: 1,

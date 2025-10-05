@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: spacing.xl * 4,
   },
   section: {
     marginTop: spacing.xl,

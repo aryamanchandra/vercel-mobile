@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { DNSRecord } from '../types';
+import { spacing } from '../theme/colors';
 
 export const DNSRecordsScreen = ({ route }: any) => {
   const { domain } = route.params;
@@ -335,6 +336,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: spacing.xl * 4,
   },
   recordCard: {
     backgroundColor: '#000',

@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { VercelEnvVariable } from '../types';
+import { spacing } from '../theme/colors';
 
 export const EnvVariablesScreen = ({ route }: any) => {
   const { projectId, projectName } = route.params;
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: spacing.xl * 4,
   },
   card: {
     backgroundColor: '#000',

@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { RuntimeLog } from '../types';
+import { spacing } from '../theme/colors';
 
 export const RuntimeLogsScreen = ({ route }: any) => {
   const { projectId, deploymentId, deploymentUrl } = route.params;
@@ -171,7 +172,10 @@ export const RuntimeLogsScreen = ({ route }: any) => {
           message={logs.length === 0 ? 'No runtime logs available for this deployment.' : 'No logs match your search.'}
         />
       ) : (
-        <ScrollView style={styles.logsContainer}>
+        <ScrollView 
+          style={styles.logsContainer}
+          contentContainerStyle={styles.logsContent}
+        >
           {filteredLogs.map((log, index) => (
             <TouchableOpacity
               key={index}
@@ -293,6 +297,9 @@ const styles = StyleSheet.create({
   },
   logsContainer: {
     flex: 1,
+  },
+  logsContent: {
+    paddingBottom: spacing.xl * 4,
   },
   logEntry: {
     paddingHorizontal: 16,

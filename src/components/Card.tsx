@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
   },
   elevated: {
-    backgroundColor: colors.surface.elevated,
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border.default,
   },
