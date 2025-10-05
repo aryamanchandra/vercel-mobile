@@ -3,12 +3,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing } from '../theme/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, typography } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
 import { LoginScreen } from '../screens/LoginScreen';
-import { DashboardScreen } from '../screens/DashboardScreen';
 import { ProjectsScreen } from '../screens/ProjectsScreen';
 import { DeploymentsScreen } from '../screens/DeploymentsScreen';
 import { DomainsScreen } from '../screens/DomainsScreen';
@@ -25,6 +25,8 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -43,9 +45,9 @@ const TabNavigator = () => {
           backgroundColor: colors.background,
           borderTopWidth: 1,
           borderTopColor: colors.border.default,
-          height: 60,
-          paddingBottom: spacing.sm,
-          paddingTop: spacing.sm,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 4,
+          paddingTop: 8,
         },
         tabBarActiveTintColor: colors.foreground,
         tabBarInactiveTintColor: colors.gray[600],
@@ -57,15 +59,6 @@ const TabNavigator = () => {
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name="DashboardTab"
-        component={DashboardScreen}
-        options={{
-          title: 'Dashboard',
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
-        }}
-      />
       <Tab.Screen
         name="ProjectsTab"
         component={ProjectsScreen}
