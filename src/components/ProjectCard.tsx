@@ -109,15 +109,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, tags
 
   const formatTimeAgo = (timestamp: number) => {
     if (!timestamp || isNaN(timestamp)) {
-      console.log('Invalid timestamp:', timestamp);
       return 'recently';
     }
     
     const now = Date.now();
     const diff = now - timestamp;
-    
-    // Log for debugging
-    console.log('Timestamp:', timestamp, 'Now:', now, 'Diff:', diff);
     
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);

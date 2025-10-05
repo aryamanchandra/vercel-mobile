@@ -112,6 +112,43 @@ export interface ApiResponse<T> {
   };
 }
 
+// Account Usage (high-level shape; fields are optional depending on plan/features)
+export interface VercelUsagePeriod {
+  start?: number;
+  end?: number;
+}
+
+export interface VercelBandwidthUsage {
+  used?: number; // bytes
+  included?: number; // bytes included in plan
+}
+
+export interface VercelFunctionUsage {
+  executions?: number; // total invocations
+  durationMs?: number; // total compute duration in ms
+}
+
+export interface VercelBuildUsage {
+  minutesUsed?: number;
+  includedMinutes?: number;
+}
+
+export interface VercelStorageUsage {
+  used?: number; // bytes
+  included?: number; // bytes
+}
+
+export interface VercelUsage {
+  period?: VercelUsagePeriod;
+  bandwidth?: VercelBandwidthUsage;
+  serverlessFunctions?: VercelFunctionUsage;
+  edgeFunctions?: VercelFunctionUsage;
+  build?: VercelBuildUsage;
+  storage?: VercelStorageUsage;
+  // Unknown additional metrics from API are allowed
+  [key: string]: any;
+}
+
 export interface DNSRecord {
   id: string;
   slug: string;

@@ -6,6 +6,7 @@ import type {
   VercelTeam,
   VercelEnvVariable,
   PaginationResponse,
+  VercelUsage,
 } from '../types';
 
 const BASE_URL = 'https://api.vercel.com';
@@ -197,18 +198,54 @@ export class VercelAPI {
   }
 
   // Redeploy
-  async redeployDeployment(deploymentId: string, name: string, target?: string) {
-    const response = await this.client.post('/v13/deployments', {
-      name,
+  /**
+   * Attempts to redeploy a previous deployment.
+   * First tries the dedicated redeploy endpoint, then falls back to create-deployment with deploymentId.
+   */
+  async redeployDeployment(
+    deploymentId: string,
+    project?: string,
+    target: 'production' | 'preview' | 'development' = 'production',
+    name?: string
+  ) {
+    // Redeploy via create-deployment (documented) – requires `name`
+    const normalizedTarget: 'production' | 'preview' = target === 'production' ? 'production' : 'preview';
+    const body: any = {
       deploymentId,
-      target: target || 'production',
-    });
-    return response.data;
+      target: normalizedTarget,
+    };
+    if (project) body.project = project; // allow API to disambiguate
+    if (name) body.name = name; // required by API if not inferrable
+
+    console.debug('[VercelAPI][redeploy] create start', body);
+    try {
+      const res = await this.client.post('/v13/deployments', body);
+      console.debug('[VercelAPI][redeploy] create success', { id: deploymentId });
+      return res.data;
+    } catch (err: any) {
+      const errMeta = {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message,
+      };
+      console.error('[VercelAPI][redeploy] create failed', errMeta);
+      throw new Error(
+        `Redeploy failed (${errMeta.status || 'unknown'}): ${errMeta.data?.error?.message || errMeta.message || 'Unknown error'}`
+      );
+    }
   }
 
   // Analytics
   async getProjectAnalytics(projectId: string) {
     const response = await this.client.get(`/v1/analytics/${projectId}`);
+    return response.data;
+  }
+
+  // Account Usage (Vercel Docs: Usage API)
+  async getAccountUsage(params?: { from?: number; to?: number }) {
+    const response = await this.client.get<VercelUsage>(`/v4/usage`, {
+      params: params || {},
+    });
     return response.data;
   }
 }
