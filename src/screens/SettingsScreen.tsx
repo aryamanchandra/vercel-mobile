@@ -12,6 +12,7 @@ import {
 import { colors, spacing, typography, borderRadius } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
+import { CacheManager, CacheKeys, CacheDurations } from '../utils/cache';
 
 export const SettingsScreen = () => {
   const { logout, api, teamId, setTeamId } = useAuth();
@@ -28,12 +29,32 @@ export const SettingsScreen = () => {
 
     try {
       setLoading(true);
+      
+      // Try to get cached data first
+      const [cachedUser, cachedTeams] = await Promise.all([
+        CacheManager.get<any>(CacheKeys.USER, CacheDurations.LONG),
+        CacheManager.get<any[]>(CacheKeys.TEAMS, CacheDurations.LONG),
+      ]);
+      
+      if (cachedUser && cachedTeams) {
+        setUser(cachedUser);
+        setTeams(cachedTeams);
+        setLoading(false);
+      }
+      
       const [userData, teamsData] = await Promise.all([
         api.getCurrentUser(),
         api.getTeams(),
       ]);
+      
       setUser(userData.user);
       setTeams(teamsData.teams || []);
+      
+      // Cache the fresh data
+      await Promise.all([
+        CacheManager.set(CacheKeys.USER, userData.user),
+        CacheManager.set(CacheKeys.TEAMS, teamsData.teams || []),
+      ]);
     } catch (err) {
       console.error('Error fetching user data:', err);
     } finally {
@@ -87,7 +108,10 @@ export const SettingsScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+      >
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
       </View>
@@ -172,6 +196,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl * 4,
   },
   centered: {
     flex: 1,

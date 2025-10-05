@@ -19,6 +19,7 @@ import { DeploymentCard } from '../components/DeploymentCard';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
 import { VercelDeployment, VercelProject } from '../types';
+import { CacheManager, CacheKeys, CacheDurations } from '../utils/cache';
 
 export const DeploymentsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
@@ -36,12 +37,27 @@ export const DeploymentsScreen = ({ navigation }: any) => {
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
-  const fetchDeployments = async (isRefreshing = false) => {
+  const fetchDeployments = async (isRefreshing = false, forceRefresh = false) => {
     if (!api) return;
 
     try {
       if (!isRefreshing) setLoading(true);
       setError(null);
+      
+      // Try to get cached data first
+      if (!forceRefresh && !isRefreshing) {
+        const [cachedDeployments, cachedProjects] = await Promise.all([
+          CacheManager.get<VercelDeployment[]>(CacheKeys.DEPLOYMENTS, CacheDurations.SHORT),
+          CacheManager.get<VercelProject[]>(CacheKeys.PROJECTS, CacheDurations.MEDIUM),
+        ]);
+        
+        if (cachedDeployments && cachedProjects) {
+          setDeployments(cachedDeployments);
+          setProjects(cachedProjects);
+          setFilteredDeployments(cachedDeployments);
+          setLoading(false);
+        }
+      }
       
       const [deploymentsResponse, projectsResponse] = await Promise.all([
         api.getDeployments(50),
@@ -51,6 +67,12 @@ export const DeploymentsScreen = ({ navigation }: any) => {
       setDeployments(deploymentsResponse.deployments);
       setProjects(projectsResponse.projects);
       setFilteredDeployments(deploymentsResponse.deployments);
+      
+      // Cache the fresh data
+      await Promise.all([
+        CacheManager.set(CacheKeys.DEPLOYMENTS, deploymentsResponse.deployments),
+        CacheManager.set(CacheKeys.PROJECTS, projectsResponse.projects),
+      ]);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch deployments');
     } finally {
@@ -513,7 +535,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: spacing.xl * 4,
   },
   modalOverlay: {
     flex: 1,

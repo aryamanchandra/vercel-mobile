@@ -20,6 +20,8 @@ import { EmptyState } from '../components/EmptyState';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { SkeletonList } from '../components/SkeletonLoader';
 import { VercelProject } from '../types';
+import { CacheManager, CacheKeys, CacheDurations } from '../utils/cache';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Project tags - stored in AsyncStorage for persistence
 const PROJECT_TAGS: { [key: string]: string[] } = {};
@@ -27,7 +29,6 @@ const PROJECT_TAGS: { [key: string]: string[] } = {};
 // Helper to load tags from AsyncStorage
 const loadProjectTags = async () => {
   try {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
     const stored = await AsyncStorage.getItem('projectTags');
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -56,12 +57,37 @@ export const ProjectsScreen = ({ navigation }: any) => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  const fetchProjects = async (isRefreshing = false) => {
+  const fetchProjects = async (isRefreshing = false, forceRefresh = false) => {
     if (!api) return;
 
     try {
       if (!isRefreshing) setLoading(true);
       setError(null);
+      
+      // Try to get cached data first (only if not force refreshing)
+      if (!forceRefresh && !isRefreshing) {
+        const cachedProjects = await CacheManager.get<VercelProject[]>(
+          CacheKeys.PROJECTS,
+          CacheDurations.MEDIUM
+        );
+        
+        if (cachedProjects && cachedProjects.length > 0) {
+          setProjects(cachedProjects);
+          setFilteredProjects(cachedProjects);
+          setLoading(false);
+          
+          // Extract unique tags from cached projects
+          const allTags = new Set<string>();
+          cachedProjects.forEach(project => {
+            const tags = PROJECT_TAGS[project.id] || [];
+            tags.forEach(tag => allTags.add(tag));
+          });
+          setAvailableTags(Array.from(allTags).sort());
+          
+          // Continue fetching in background to update cache
+          // Don't return yet, let it fetch fresh data
+        }
+      }
       
       // Fetch projects
       const response = await api.getProjects(100);
@@ -87,6 +113,9 @@ export const ProjectsScreen = ({ navigation }: any) => {
       
       setProjects(projectsWithDeployments);
       setFilteredProjects(projectsWithDeployments);
+      
+      // Cache the fresh data
+      await CacheManager.set(CacheKeys.PROJECTS, projectsWithDeployments);
       
       // Extract unique tags from all projects
       const allTags = new Set<string>();
@@ -186,7 +215,7 @@ export const ProjectsScreen = ({ navigation }: any) => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchProjects(true);
+    fetchProjects(true, true); // isRefreshing=true, forceRefresh=true
   }, [api]);
 
   const handleProjectPress = (project: VercelProject) => {
@@ -301,11 +330,24 @@ export const ProjectsScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Projects</Text>
-          <Text style={styles.count}>
-            {searchQuery ? `${filteredProjects.length} of ${projects.length}` : `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`}
-          </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.title}>Projects</Text>
+            <Text style={styles.count}>
+              {searchQuery ? `${filteredProjects.length} of ${projects.length}` : `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.refreshButton}
+            onPress={() => fetchProjects(true, true)}
+            disabled={refreshing}
+          >
+            <Ionicons 
+              name="refresh" 
+              size={22} 
+              color={refreshing ? colors.gray[600] : colors.foreground} 
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -500,6 +542,18 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     backgroundColor: colors.background,
   },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  refreshButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.sm,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
   title: {
     fontSize: typography.sizes.xxxxl,
     fontWeight: typography.weights.bold,
@@ -515,7 +569,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: spacing.xl * 4,
   },
   modalOverlay: {
     flex: 1,

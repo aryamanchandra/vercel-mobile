@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
 import { DomainCard } from '../components/DomainCard';
 import { VercelDomain } from '../types';
+import { CacheManager, CacheKeys, CacheDurations } from '../utils/cache';
 
 export const DomainsScreen = ({ navigation }: any) => {
   const { api } = useAuth();
@@ -21,15 +22,31 @@ export const DomainsScreen = ({ navigation }: any) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDomains = async (isRefreshing = false) => {
+  const fetchDomains = async (isRefreshing = false, forceRefresh = false) => {
     if (!api) return;
 
     try {
       if (!isRefreshing) setLoading(true);
       setError(null);
       
+      // Try to get cached data first
+      if (!forceRefresh && !isRefreshing) {
+        const cachedDomains = await CacheManager.get<VercelDomain[]>(
+          CacheKeys.DOMAINS,
+          CacheDurations.LONG
+        );
+        
+        if (cachedDomains) {
+          setDomains(cachedDomains);
+          setLoading(false);
+        }
+      }
+      
       const response = await api.getDomains(100);
       setDomains(response.domains);
+      
+      // Cache the fresh data
+      await CacheManager.set(CacheKeys.DOMAINS, response.domains);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch domains');
     } finally {
@@ -52,7 +69,6 @@ export const DomainsScreen = ({ navigation }: any) => {
       domain={item}
       onPress={() => {
         // Could navigate to domain details screen
-        console.log('Domain pressed:', item.name);
       }}
       onManageDNS={() => navigation.navigate('DNSRecords', { domain: item.name })}
     />
@@ -148,7 +164,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl * 2,
+    paddingBottom: spacing.xl * 4,
   },
 });
 

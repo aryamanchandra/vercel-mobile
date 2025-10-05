@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VercelAPI } from '../api/vercel';
+import { CacheManager } from '../utils/cache';
 
 interface AuthContextType {
   token: string | null;
   teamId: string | null;
   api: VercelAPI | null;
   isLoading: boolean;
+  login: (token: string) => Promise<void>;
   setToken: (token: string) => Promise<void>;
   setTeamId: (teamId: string | null) => Promise<void>;
   logout: () => Promise<void>;
@@ -52,6 +54,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const login = async (newToken: string) => {
+    try {
+      await AsyncStorage.setItem(TOKEN_KEY, newToken);
+      setTokenState(newToken);
+    } catch (error) {
+      console.error('Error saving token:', error);
+      throw error;
+    }
+  };
+
   const setToken = async (newToken: string) => {
     try {
       await AsyncStorage.setItem(TOKEN_KEY, newToken);
@@ -79,6 +91,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       await AsyncStorage.multiRemove([TOKEN_KEY, TEAM_ID_KEY]);
+      // Clear all cached data on logout
+      await CacheManager.clearAll();
       setTokenState(null);
       setTeamIdState(null);
     } catch (error) {
@@ -94,6 +108,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         teamId,
         api,
         isLoading,
+        login,
         setToken,
         setTeamId,
         logout,
